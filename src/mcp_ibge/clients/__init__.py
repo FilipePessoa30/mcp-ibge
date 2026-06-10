@@ -1,1 +1,1 @@
-"""Clientes assíncronos para as APIs públicas de dados do IBGE."""
+"""Clientes HTTP "finos" para as APIs públicas de dados do IBGE."""

@@ -1,117 +1,55 @@
-"""Cliente para a API de Localidades do IBGE.
+"""Cliente "fino" para a API de Localidades do IBGE (sem regras de negócio).
 
 Documentação oficial: https://servicodados.ibge.gov.br/api/docs/localidades
+
+Cada método mapeia diretamente um endpoint da API. Filtros, buscas e
+normalização ficam em `mcp_ibge.services.localidades_service`.
 """
 
 from __future__ import annotations
 
-import unicodedata
-from typing import Any
-
-from ..config import LOCALIDADES_BASE_URL
-from ..http_client import get_json
-from .base import IBGEResult
+from ..config import get_settings
+from .base import BaseIBGEClient, IBGEResult
 
 
-def _normalizar(texto: str) -> str:
-    """Remove acentos e normaliza para minúsculas, para busca textual simples."""
-    sem_acento = unicodedata.normalize("NFKD", texto)
-    sem_acento = "".join(c for c in sem_acento if not unicodedata.combining(c))
-    return sem_acento.lower().strip()
+class LocalidadesClient(BaseIBGEClient):
+    """Cliente HTTP para `/localidades` (regiões, estados e municípios)."""
 
+    def __init__(self) -> None:
+        super().__init__(get_settings().localidades_base_url)
 
-async def listar_regioes() -> IBGEResult:
-    """Lista as 5 grandes regiões geográficas do Brasil."""
-    endpoint = f"{LOCALIDADES_BASE_URL}/regioes"
-    data = await get_json(endpoint)
-    return IBGEResult(data=data, endpoint=endpoint, params={})
+    async def listar_regioes(self) -> IBGEResult:
+        """`GET /regioes` — as 5 grandes regiões geográficas do Brasil."""
+        path = "/regioes"
+        data = await self.get_json(path)
+        return IBGEResult(data=data, endpoint=f"{self.base_url}{path}", params={})
 
+    async def listar_estados(self) -> IBGEResult:
+        """`GET /estados` — os 26 estados e o Distrito Federal."""
+        path = "/estados"
+        data = await self.get_json(path)
+        return IBGEResult(data=data, endpoint=f"{self.base_url}{path}", params={})
 
-async def listar_estados(regiao: str | None = None) -> IBGEResult:
-    """Lista os 26 estados e o Distrito Federal.
+    async def obter_estado(self, uf: str) -> IBGEResult:
+        """`GET /estados/{uf}` — detalhes de um estado (sigla ou ID IBGE)."""
+        path = f"/estados/{uf}"
+        data = await self.get_json(path)
+        return IBGEResult(data=data, endpoint=f"{self.base_url}{path}", params={"uf": uf})
 
-    Args:
-        regiao: Filtro opcional pela sigla (N, NE, CO, SE, S) ou ID numérico
-            da grande região. A filtragem é feita localmente sobre a lista
-            completa retornada pelo IBGE.
-    """
-    endpoint = f"{LOCALIDADES_BASE_URL}/estados"
-    data = await get_json(endpoint)
+    async def listar_municipios(self, uf: str | None = None) -> IBGEResult:
+        """`GET /municipios` ou `GET /estados/{uf}/municipios`."""
+        if uf:
+            path = f"/estados/{uf}/municipios"
+            params: dict[str, str] = {"uf": uf}
+        else:
+            path = "/municipios"
+            params = {}
 
-    params: dict[str, Any] = {}
-    if regiao:
-        regiao_norm = regiao.strip().upper()
-        data = [
-            estado
-            for estado in data
-            if estado.get("regiao", {}).get("sigla", "").upper() == regiao_norm
-            or str(estado.get("regiao", {}).get("id")) == regiao_norm
-        ]
-        params["regiao"] = regiao
+        data = await self.get_json(path)
+        return IBGEResult(data=data, endpoint=f"{self.base_url}{path}", params=params)
 
-    return IBGEResult(data=data, endpoint=endpoint, params=params)
-
-
-async def obter_estado(uf: str) -> IBGEResult:
-    """Obtém os detalhes de um estado.
-
-    Args:
-        uf: Sigla (ex.: "SP") ou ID IBGE (ex.: "35") do estado.
-    """
-    endpoint = f"{LOCALIDADES_BASE_URL}/estados/{uf}"
-    data = await get_json(endpoint)
-    return IBGEResult(data=data, endpoint=endpoint, params={"uf": uf})
-
-
-async def listar_municipios(uf: str | None = None) -> IBGEResult:
-    """Lista municípios brasileiros, opcionalmente filtrados por estado.
-
-    Args:
-        uf: Sigla (ex.: "SP") ou ID IBGE do estado. Se omitido, retorna os
-            ~5570 municípios do Brasil inteiro.
-    """
-    if uf:
-        endpoint = f"{LOCALIDADES_BASE_URL}/estados/{uf}/municipios"
-        params: dict[str, Any] = {"uf": uf}
-    else:
-        endpoint = f"{LOCALIDADES_BASE_URL}/municipios"
-        params = {}
-
-    data = await get_json(endpoint)
-    return IBGEResult(data=data, endpoint=endpoint, params=params)
-
-
-async def obter_municipio(codigo: str) -> IBGEResult:
-    """Obtém os detalhes completos de um município pelo código IBGE de 7 dígitos.
-
-    Args:
-        codigo: Código IBGE do município (ex.: "3550308" para São Paulo/SP).
-    """
-    endpoint = f"{LOCALIDADES_BASE_URL}/municipios/{codigo}"
-    data = await get_json(endpoint)
-    return IBGEResult(data=data, endpoint=endpoint, params={"codigo": codigo})
-
-
-async def buscar_municipios_por_nome(
-    nome: str, uf: str | None = None, limit: int = 20
-) -> IBGEResult:
-    """Busca municípios cujo nome contenha o termo informado (case/acento-insensível).
-
-    Args:
-        nome: Termo de busca (ex.: "Sao Jose" encontra "São José dos Campos").
-        uf: Restringe a busca aos municípios de um estado (sigla ou ID).
-        limit: Número máximo de resultados retornados.
-    """
-    listagem = await listar_municipios(uf=uf)
-    termo = _normalizar(nome)
-
-    encontrados = [
-        municipio for municipio in listagem.data if termo in _normalizar(municipio.get("nome", ""))
-    ]
-    encontrados = encontrados[: max(limit, 0)]
-
-    params: dict[str, Any] = {"nome": nome, "limit": limit}
-    if uf:
-        params["uf"] = uf
-
-    return IBGEResult(data=encontrados, endpoint=listagem.endpoint, params=params)
+    async def obter_municipio(self, codigo: str) -> IBGEResult:
+        """`GET /municipios/{codigo}` — detalhes de um município pelo código IBGE."""
+        path = f"/municipios/{codigo}"
+        data = await self.get_json(path)
+        return IBGEResult(data=data, endpoint=f"{self.base_url}{path}", params={"codigo": codigo})

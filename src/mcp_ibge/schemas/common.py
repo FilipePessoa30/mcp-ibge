@@ -1,8 +1,7 @@
 """Envelope de resposta padrão: todo retorno de tool inclui metadados de fonte.
 
 Isso garante rastreabilidade (source_name, source_url, retrieved_at, endpoint
-e params) para qualquer dado retornado por este servidor, conforme exigido
-pelo projeto.
+e params) para qualquer dado retornado por este servidor.
 """
 
 from __future__ import annotations
@@ -12,13 +11,13 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from .config import SOURCE_NAME
+from ..config import get_settings
 
 
 class SourceMetadata(BaseModel):
     """Metadados de proveniência de uma resposta."""
 
-    source_name: str = SOURCE_NAME
+    source_name: str
     source_url: str
     retrieved_at: str
     endpoint: str
@@ -43,6 +42,18 @@ def _now_iso() -> str:
     return datetime.now(UTC).isoformat()
 
 
+def _build_metadata(
+    *, source_url: str, endpoint: str, params: dict[str, Any] | None
+) -> SourceMetadata:
+    return SourceMetadata(
+        source_name=get_settings().source_name,
+        source_url=source_url,
+        retrieved_at=_now_iso(),
+        endpoint=endpoint,
+        params=params or {},
+    )
+
+
 def build_response(
     *,
     source_url: str,
@@ -51,12 +62,7 @@ def build_response(
     data: Any,
 ) -> dict[str, Any]:
     """Monta o envelope de sucesso `{metadata, data}`."""
-    metadata = SourceMetadata(
-        source_url=source_url,
-        retrieved_at=_now_iso(),
-        endpoint=endpoint,
-        params=params or {},
-    )
+    metadata = _build_metadata(source_url=source_url, endpoint=endpoint, params=params)
     return ToolResponse(metadata=metadata, data=data).model_dump(mode="json")
 
 
@@ -68,10 +74,5 @@ def build_error_response(
     error: str,
 ) -> dict[str, Any]:
     """Monta o envelope de erro `{metadata, error}`."""
-    metadata = SourceMetadata(
-        source_url=source_url,
-        retrieved_at=_now_iso(),
-        endpoint=endpoint,
-        params=params or {},
-    )
+    metadata = _build_metadata(source_url=source_url, endpoint=endpoint, params=params)
     return ToolErrorResponse(metadata=metadata, error=error).model_dump(mode="json")

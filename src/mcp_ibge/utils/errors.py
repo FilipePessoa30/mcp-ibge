@@ -1,4 +1,4 @@
-"""Exceções específicas do cliente das APIs do IBGE."""
+"""Exceções específicas dos clientes das APIs do IBGE."""
 
 from __future__ import annotations
 

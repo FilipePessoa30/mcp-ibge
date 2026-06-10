@@ -1,4 +1,4 @@
-"""Cliente para a API de Agregados (SIDRA) do IBGE.
+"""Cliente "fino" para a API de Agregados (SIDRA) do IBGE (sem regras de negócio).
 
 Documentação oficial: https://servicodados.ibge.gov.br/api/docs/agregados
 
@@ -12,123 +12,67 @@ Conceitos principais:
     - "Localidade": unidade territorial consultada, no formato
       ``N<nivel>[<ids>]``, ex.: ``N1[all]`` (Brasil), ``N3[all]`` (todos os
       estados), ``N6[3550308]`` (município de São Paulo).
+
+Filtros, aliases e regras de negócio ficam em
+`mcp_ibge.services.agregados_service`.
 """
 
 from __future__ import annotations
 
 from typing import Any
 
-from ..config import AGREGADOS_BASE_URL
-from ..http_client import get_json
-from .base import IBGEResult
-
-# Alias amigável para o nível territorial "Brasil" (N1).
-_LOCALIDADE_ALIASES = {
-    "brasil": "N1[all]",
-    "br": "N1[all]",
-}
+from ..config import get_settings
+from .base import BaseIBGEClient, IBGEResult
 
 
-def _resolver_localidades(localidades: str) -> str:
-    """Resolve aliases simples (ex.: "BR") para a sintaxe N<nivel>[<ids>] do SIDRA."""
-    return _LOCALIDADE_ALIASES.get(localidades.strip().lower(), localidades)
+class AgregadosClient(BaseIBGEClient):
+    """Cliente HTTP para `/agregados` (tabelas, metadados e dados do SIDRA)."""
 
+    def __init__(self) -> None:
+        super().__init__(get_settings().agregados_base_url)
 
-async def listar_agregados(
-    pesquisa: str | None = None,
-    assunto: str | None = None,
-    texto: str | None = None,
-) -> IBGEResult:
-    """Lista os agregados (tabelas) disponíveis no SIDRA.
+    async def listar_agregados(
+        self, pesquisa: str | None = None, assunto: str | None = None
+    ) -> IBGEResult:
+        """`GET /agregados` — lista de pesquisas e seus agregados (tabelas)."""
+        params: dict[str, Any] = {}
+        if pesquisa:
+            params["pesquisa"] = pesquisa
+        if assunto:
+            params["assunto"] = assunto
 
-    Args:
-        pesquisa: Filtra pelo nome/sigla da pesquisa de origem (ex.: "Censo
-            Demográfico"), conforme aceito pela API do IBGE.
-        assunto: Filtra pelo nome do assunto (ex.: "População"), conforme
-            aceito pela API do IBGE.
-        texto: Filtro textual adicional aplicado localmente sobre o nome dos
-            agregados retornados (case-insensitive, substring).
-    """
-    endpoint = AGREGADOS_BASE_URL
-    query: dict[str, Any] = {}
-    if pesquisa:
-        query["pesquisa"] = pesquisa
-    if assunto:
-        query["assunto"] = assunto
+        data = await self.get_json("", params=params or None)
+        return IBGEResult(data=data, endpoint=self.base_url, params=params)
 
-    data = await get_json(endpoint, params=query or None)
+    async def obter_metadados(self, agregado_id: int) -> IBGEResult:
+        """`GET /agregados/{id}/metadados` — variáveis, períodos e níveis territoriais."""
+        path = f"/{agregado_id}/metadados"
+        data = await self.get_json(path)
+        return IBGEResult(
+            data=data, endpoint=f"{self.base_url}{path}", params={"agregado_id": agregado_id}
+        )
 
-    if texto:
-        termo = texto.strip().lower()
-        filtrado = []
-        for grupo in data:
-            agregados_filtrados = [
-                agregado
-                for agregado in grupo.get("agregados", [])
-                if termo in agregado.get("nome", "").lower()
-            ]
-            if agregados_filtrados:
-                filtrado.append({**grupo, "agregados": agregados_filtrados})
-        data = filtrado
+    async def consultar_dados(
+        self,
+        agregado_id: int,
+        *,
+        variaveis: str = "all",
+        periodos: str = "-1",
+        localidades: str = "N1[all]",
+        classificacoes: str | None = None,
+    ) -> IBGEResult:
+        """`GET /agregados/{id}/periodos/{periodos}/variaveis/{variaveis}`."""
+        path = f"/{agregado_id}/periodos/{periodos}/variaveis/{variaveis}"
+        query: dict[str, Any] = {"localidades": localidades}
+        if classificacoes:
+            query["classificacao"] = classificacoes
 
-    request_params = dict(query)
-    if texto:
-        request_params["texto"] = texto
+        data = await self.get_json(path, params=query)
 
-    return IBGEResult(data=data, endpoint=endpoint, params=request_params)
-
-
-async def obter_metadados_agregado(agregado_id: int) -> IBGEResult:
-    """Obtém os metadados completos de um agregado: variáveis, períodos e níveis territoriais.
-
-    Args:
-        agregado_id: ID numérico do agregado (ex.: 6579 = "População residente
-            estimada").
-    """
-    endpoint = f"{AGREGADOS_BASE_URL}/{agregado_id}/metadados"
-    data = await get_json(endpoint)
-    return IBGEResult(data=data, endpoint=endpoint, params={"agregado_id": agregado_id})
-
-
-async def consultar_dados_agregado(
-    agregado_id: int,
-    variaveis: str = "all",
-    periodos: str = "-1",
-    localidades: str = "N1[all]",
-    classificacoes: str | None = None,
-) -> IBGEResult:
-    """Consulta valores de um agregado do SIDRA para variáveis/períodos/localidades.
-
-    Args:
-        agregado_id: ID numérico do agregado (use `obter_metadados_agregado`
-            para descobrir IDs de variáveis e níveis territoriais válidos).
-        variaveis: ID de uma variável, lista separada por vírgula, ou "all"
-            para todas as variáveis do agregado.
-        periodos: Período(s) no formato aceito pelo SIDRA: um ano ("2021"),
-            um intervalo ("2010-2020"), uma lista ("2019,2021") ou um valor
-            relativo ("-1" para o último período disponível, "-3" para os
-            últimos 3).
-        localidades: Unidade territorial no formato ``N<nivel>[<ids>]``, ex.:
-            ``N1[all]`` (Brasil), ``N3[all]`` (todos os estados),
-            ``N6[3550308]`` (município de São Paulo). Aceita o alias "BR"
-            como atalho para ``N1[all]``.
-        classificacoes: Filtro opcional de classificação/categoria no formato
-            ``<id_classificacao>[<id_categoria>]``, conforme os metadados do
-            agregado.
-    """
-    localidades_resolvidas = _resolver_localidades(localidades)
-    endpoint = f"{AGREGADOS_BASE_URL}/{agregado_id}/periodos/{periodos}/variaveis/{variaveis}"
-
-    query: dict[str, Any] = {"localidades": localidades_resolvidas}
-    if classificacoes:
-        query["classificacao"] = classificacoes
-
-    data = await get_json(endpoint, params=query)
-
-    request_params = {
-        "agregado_id": agregado_id,
-        "variaveis": variaveis,
-        "periodos": periodos,
-        **query,
-    }
-    return IBGEResult(data=data, endpoint=endpoint, params=request_params)
+        params = {
+            "agregado_id": agregado_id,
+            "variaveis": variaveis,
+            "periodos": periodos,
+            **query,
+        }
+        return IBGEResult(data=data, endpoint=f"{self.base_url}{path}", params=params)

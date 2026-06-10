@@ -11,6 +11,8 @@ import time
 from collections.abc import Hashable
 from typing import Any
 
+from ..config import get_settings
+
 
 class TTLCache:
     """Cache chave -> valor com expiração relativa (TTL) e limite de entradas."""
@@ -49,3 +51,26 @@ class TTLCache:
 
     def __len__(self) -> int:
         return len(self._store)
+
+
+_cache: TTLCache | None = None
+
+
+def get_cache() -> TTLCache | None:
+    """Retorna o cache global (singleton), ou None se o cache estiver desabilitado."""
+    global _cache
+
+    settings = get_settings()
+    if not settings.cache_enabled:
+        return None
+
+    if _cache is None:
+        _cache = TTLCache(ttl_seconds=settings.cache_ttl_seconds, max_size=settings.cache_max_size)
+    return _cache
+
+
+def clear_cache() -> None:
+    """Limpa o cache global. Útil em testes e para depuração."""
+    global _cache
+    if _cache is not None:
+        _cache.clear()

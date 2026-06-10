@@ -1,60 +1,45 @@
-"""Configuração central do servidor: URLs base, timeouts e cache.
+"""Configuração central do servidor: URLs base, timeouts, cache e transporte.
 
-Todos os valores ajustáveis podem ser sobrescritos por variáveis de ambiente,
-o que permite customizar o comportamento sem alterar código (ex.: ao rodar
-via Claude Desktop ou Docker).
+Todos os valores são ajustáveis via variáveis de ambiente com prefixo
+``MCP_IBGE_`` (ou um arquivo ``.env`` na raiz do projeto — veja
+``.env.example``), o que permite customizar o comportamento sem alterar
+código (ex.: ao rodar via Claude Desktop, Cursor ou Docker).
 """
 
 from __future__ import annotations
 
-import os
+from functools import lru_cache
 
-# URLs base das APIs públicas do IBGE (sem necessidade de chave de API).
-LOCALIDADES_BASE_URL = "https://servicodados.ibge.gov.br/api/v1/localidades"
-AGREGADOS_BASE_URL = "https://servicodados.ibge.gov.br/api/v3/agregados"
-PROJECOES_BASE_URL = "https://servicodados.ibge.gov.br/api/v1/projecoes"
-
-# Identificação da fonte usada nos metadados de rastreabilidade das respostas.
-SOURCE_NAME = "IBGE - Instituto Brasileiro de Geografia e Estatística"
-
-USER_AGENT = "mcp-ibge/0.1 (+https://github.com/your-username/mcp-ibge)"
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-def _env_float(name: str, default: float) -> float:
-    raw = os.environ.get(name)
-    if raw is None:
-        return default
-    try:
-        return float(raw)
-    except ValueError:
-        return default
+class Settings(BaseSettings):
+    """Configurações do servidor, lidas de variáveis de ambiente / `.env`."""
+
+    model_config = SettingsConfigDict(env_prefix="MCP_IBGE_", env_file=".env", extra="ignore")
+
+    # URLs base das APIs públicas do IBGE (sem necessidade de chave de API).
+    localidades_base_url: str = "https://servicodados.ibge.gov.br/api/v1/localidades"
+    agregados_base_url: str = "https://servicodados.ibge.gov.br/api/v3/agregados"
+
+    # Identificação usada nos metadados de rastreabilidade e no header User-Agent.
+    source_name: str = "IBGE - Instituto Brasileiro de Geografia e Estatística"
+    user_agent: str = "mcp-ibge/0.1 (+https://github.com/your-username/mcp-ibge)"
+
+    # Timeout (em segundos) aplicado a cada requisição HTTP às APIs do IBGE.
+    timeout: float = 15.0
+
+    # Cache simples em memória (TTL) para reduzir chamadas repetidas às APIs.
+    cache_enabled: bool = True
+    cache_ttl_seconds: float = 3600.0
+    cache_max_size: int = 256
+
+    # Logging e transporte do servidor MCP.
+    log_level: str = "INFO"
+    transport: str = "stdio"
 
 
-def _env_int(name: str, default: int) -> int:
-    raw = os.environ.get(name)
-    if raw is None:
-        return default
-    try:
-        return int(raw)
-    except ValueError:
-        return default
-
-
-def _env_bool(name: str, default: bool) -> bool:
-    raw = os.environ.get(name)
-    if raw is None:
-        return default
-    return raw.strip().lower() not in {"0", "false", "no", "off"}
-
-
-# Timeout (em segundos) aplicado a cada requisição HTTP feita às APIs do IBGE.
-DEFAULT_TIMEOUT = _env_float("MCP_IBGE_TIMEOUT", 15.0)
-
-# Cache simples em memória (TTL) para reduzir chamadas repetidas às APIs.
-CACHE_ENABLED = _env_bool("MCP_IBGE_CACHE_ENABLED", True)
-CACHE_TTL_SECONDS = _env_float("MCP_IBGE_CACHE_TTL", 3600.0)
-CACHE_MAX_SIZE = _env_int("MCP_IBGE_CACHE_MAX_SIZE", 256)
-
-# Nível de log e transporte do servidor MCP.
-LOG_LEVEL = os.environ.get("MCP_IBGE_LOG_LEVEL", "INFO").upper()
-TRANSPORT = os.environ.get("MCP_IBGE_TRANSPORT", "stdio")
+@lru_cache
+def get_settings() -> Settings:
+    """Retorna a instância (única, em cache) das configurações do servidor."""
+    return Settings()

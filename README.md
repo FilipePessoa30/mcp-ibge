@@ -23,6 +23,7 @@ estatísticos do **SIDRA** e indicadores de **população**.
 - [Configuração (variáveis de ambiente)](#configuração-variáveis-de-ambiente)
 - [Integração com clientes MCP](#integração-com-clientes-mcp)
 - [Desenvolvimento](#desenvolvimento)
+- [Documentação adicional](#documentação-adicional)
 - [Limitações e fontes de dados](#limitações-e-fontes-de-dados)
 - [Licença](#licença)
 
@@ -53,6 +54,8 @@ pip install -e ".[dev]"
 
 ```bash
 uv run mcp-ibge
+# ou, equivalente:
+uv run python -m mcp_ibge.server
 ```
 
 Isso inicia o servidor MCP usando o transporte **stdio** (entrada/saída
@@ -101,12 +104,15 @@ uv run mcp-ibge
 | `obter_metadados_agregado` | Metadados de um agregado: variáveis, períodos e níveis territoriais disponíveis. |
 | `consultar_dados_agregado` | Consulta valores de um agregado para variáveis, períodos e localidades específicas. |
 
-### População
+### Indicadores
 
 | Tool | Descrição |
 | --- | --- |
 | `obter_populacao_municipio` | População residente estimada mais recente de um município (agregado SIDRA 6579). |
-| `obter_projecao_populacao` | Projeção populacional do IBGE para o Brasil ou uma UF. |
+
+Veja [docs/tools.md](docs/tools.md) para a descrição completa de argumentos
+de cada tool e [examples/queries.md](examples/queries.md) para exemplos de
+chamadas.
 
 ### Exemplos de uso
 
@@ -205,11 +211,19 @@ oficial**, com data/hora da consulta e os parâmetros utilizados.
 
 ## Configuração (variáveis de ambiente)
 
+Todas as configurações têm valores padrão e podem ser ajustadas via
+variáveis de ambiente (prefixo `MCP_IBGE_`) ou um arquivo `.env` na raiz do
+projeto — veja [.env.example](.env.example).
+
 | Variável | Padrão | Descrição |
 | --- | --- | --- |
-| `MCP_IBGE_TIMEOUT` | `15` | Timeout (segundos) para cada requisição HTTP às APIs do IBGE. |
-| `MCP_IBGE_CACHE_ENABLED` | `true` | Habilita/desabilita o cache em memória (`false`/`0`/`no` para desabilitar). |
-| `MCP_IBGE_CACHE_TTL` | `3600` | Tempo de vida (segundos) das entradas em cache. |
+| `MCP_IBGE_LOCALIDADES_BASE_URL` | `https://servicodados.ibge.gov.br/api/v1/localidades` | Base URL da API de Localidades. |
+| `MCP_IBGE_AGREGADOS_BASE_URL` | `https://servicodados.ibge.gov.br/api/v3/agregados` | Base URL da API de Agregados/SIDRA. |
+| `MCP_IBGE_SOURCE_NAME` | `IBGE - Instituto Brasileiro de Geografia e Estatística` | Nome da fonte exibido em `metadata.source_name`. |
+| `MCP_IBGE_USER_AGENT` | `mcp-ibge/0.1 (+https://github.com/your-username/mcp-ibge)` | Header `User-Agent` usado nas requisições. |
+| `MCP_IBGE_TIMEOUT` | `15.0` | Timeout (segundos) para cada requisição HTTP às APIs do IBGE. |
+| `MCP_IBGE_CACHE_ENABLED` | `true` | Habilita/desabilita o cache em memória. |
+| `MCP_IBGE_CACHE_TTL_SECONDS` | `3600.0` | Tempo de vida (segundos) das entradas em cache. |
 | `MCP_IBGE_CACHE_MAX_SIZE` | `256` | Número máximo de respostas em cache simultaneamente. |
 | `MCP_IBGE_LOG_LEVEL` | `INFO` | Nível de log (`DEBUG`, `INFO`, `WARNING`, ...). Logs sempre vão para stderr. |
 | `MCP_IBGE_TRANSPORT` | `stdio` | Transporte MCP (`stdio` ou `streamable-http`). |
@@ -221,7 +235,8 @@ oficial**, com data/hora da consulta e os parâmetros utilizados.
 Edite o arquivo `claude_desktop_config.json` (no Windows:
 `%APPDATA%\Claude\claude_desktop_config.json`; no macOS:
 `~/Library/Application Support/Claude/claude_desktop_config.json`) e
-adicione:
+adicione o conteúdo de [examples/claude_desktop_config.json](examples/claude_desktop_config.json),
+ajustando `--directory` para o caminho absoluto do projeto:
 
 ```json
 {
@@ -232,7 +247,9 @@ adicione:
         "--directory",
         "/caminho/absoluto/para/mcp-ibge",
         "run",
-        "mcp-ibge"
+        "python",
+        "-m",
+        "mcp_ibge.server"
       ]
     }
   }
@@ -291,19 +308,32 @@ uv run pytest
 ```
 mcp-ibge/
 ├── src/mcp_ibge/
-│   ├── server.py        # Definição das tools FastMCP
-│   ├── __main__.py       # Entrypoint (stdio / streamable-http)
-│   ├── config.py          # URLs base, timeouts, cache (via env vars)
-│   ├── envelope.py        # Envelope de resposta com metadados de fonte
-│   ├── http_client.py     # Cliente HTTP assíncrono com cache e tratamento de erros
-│   ├── cache.py           # Cache TTL em memória
-│   ├── errors.py          # Exceções do cliente IBGE
-│   └── clients/
-│       ├── localidades.py # API de Localidades
-│       ├── agregados.py   # API de Agregados / SIDRA
-│       └── populacao.py   # Indicadores de população
-└── tests/                  # Testes unitários (pytest + respx)
+│   ├── server.py        # Monta o FastMCP, registra as tools, entrypoint `main()`
+│   ├── config.py          # Settings (pydantic-settings): URLs, timeouts, cache
+│   ├── logging_config.py  # Logging para stderr (stdio-safe)
+│   ├── clients/            # Camada HTTP "fina" (base, localidades, agregados)
+│   ├── schemas/            # Modelos Pydantic e envelope de resposta
+│   ├── services/           # Regras de negócio (filtros, aliases, indicadores)
+│   ├── tools/              # Tools FastMCP (`@mcp.tool()`)
+│   └── utils/              # cache, normalização de texto, exceções
+├── tests/                  # Testes unitários (pytest + respx)
+├── examples/               # Config de exemplo para clientes MCP e queries
+└── docs/                   # Arquitetura, tools, fontes de dados, segurança
 ```
+
+Veja [docs/architecture.md](docs/architecture.md) para uma descrição
+detalhada de cada camada e do fluxo de uma chamada.
+
+## Documentação adicional
+
+- [docs/architecture.md](docs/architecture.md) — arquitetura em camadas e
+  fluxo de uma chamada.
+- [docs/tools.md](docs/tools.md) — referência completa de cada tool.
+- [docs/data_sources.md](docs/data_sources.md) — APIs do IBGE utilizadas e
+  formato do envelope de resposta.
+- [docs/security.md](docs/security.md) — considerações de segurança.
+- [examples/queries.md](examples/queries.md) — exemplos de chamadas às
+  tools.
 
 ## Limitações e fontes de dados
 

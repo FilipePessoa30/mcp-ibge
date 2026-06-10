@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from mcp_ibge.http_client import clear_cache
+from mcp_ibge.utils.cache import clear_cache
 
 
 @pytest.fixture(autouse=True)

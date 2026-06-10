@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "ibge": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "/caminho/absoluto/para/mcp-ibge",
+        "run",
+        "python",
+        "-m",
+        "mcp_ibge.server"
+      ]
+    }
+  }
+}
