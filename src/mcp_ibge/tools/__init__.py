@@ -1,7 +1,8 @@
 """Tools FastMCP: convertem chamadas de serviço no envelope padrão de resposta.
 
 Cada submódulo (`localidades_tools`, `agregados_tools`, ...) expõe uma função
-`register(mcp)` que registra suas tools na instância `FastMCP` do servidor.
+de registro (ex.: `register_localidades_tools(mcp)`, `register(mcp)`) que
+registra suas tools na instância `FastMCP` do servidor.
 """
 
 from __future__ import annotations

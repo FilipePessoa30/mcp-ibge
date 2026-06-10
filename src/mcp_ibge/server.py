@@ -36,7 +36,7 @@ mcp = FastMCP(
     ),
 )
 
-localidades_tools.register(mcp)
+localidades_tools.register_localidades_tools(mcp)
 agregados_tools.register(mcp)
 
 
