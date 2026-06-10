@@ -9,7 +9,7 @@ src/mcp_ibge/
 ├── config.py            # Settings (pydantic-settings), lidas de env / .env
 ├── logging_config.py    # Configura logging para stderr (stdio-safe)
 ├── clients/             # Camada HTTP "fina": só chama a API e devolve dados brutos
-│   ├── base.py           # BaseIBGEClient: GET com timeout, cache e tratamento de erros
+│   ├── base.py           # AsyncIBGEClient: GET com timeout, cache e tratamento de erros
 │   ├── localidades.py    # LocalidadesClient (regiões, estados, municípios)
 │   └── agregados.py      # AgregadosClient (lista, metadados, dados do SIDRA)
 ├── schemas/              # Modelos Pydantic: validação e envelope de resposta
@@ -26,7 +26,7 @@ src/mcp_ibge/
 └── utils/
     ├── normalization.py   # normalize_text(): busca textual sem acento/caixa
     ├── cache.py            # TTLCache + singleton get_cache()/clear_cache()
-    └── errors.py           # IBGERequestError
+    └── errors.py           # IBGEClientError e subclasses (NotFound, Validation, RateLimit, Server)
 ```
 
 ## Fluxo de uma chamada
@@ -39,10 +39,11 @@ src/mcp_ibge/
    resolução de aliases) e delega ao `client`.
 4. O `client` (em `clients/`) monta a URL e os parâmetros, consulta o cache
    (`utils/cache.py`) e, em caso de *miss*, faz a requisição HTTP via
-   `BaseIBGEClient.get_json`.
-5. Erros de rede/HTTP são convertidos em `IBGERequestError` por
-   `BaseIBGEClient` e tratados por `run_tool()`, que gera um envelope de erro
-   sem derrubar o servidor.
+   `AsyncIBGEClient.get_json`.
+5. Erros de rede/HTTP são convertidos em subclasses de `IBGEClientError`
+   (`IBGENotFoundError`, `IBGEValidationError`, `IBGERateLimitError`,
+   `IBGEServerError`) por `AsyncIBGEClient` e tratados por `run_tool()`, que
+   gera um envelope de erro sem derrubar o servidor.
 
 ## Por que essa separação
 

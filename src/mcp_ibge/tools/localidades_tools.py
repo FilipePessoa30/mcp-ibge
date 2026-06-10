@@ -7,6 +7,7 @@ from typing import Annotated, Any
 from mcp.server.fastmcp import FastMCP
 from pydantic import Field
 
+from ..clients.localidades import LOCALIDADES_PATH
 from ..config import get_settings
 from ..services.localidades_service import LocalidadesService
 from . import run_tool
@@ -16,7 +17,7 @@ _service = LocalidadesService()
 
 def register(mcp: FastMCP) -> None:
     """Registra as tools de Localidades na instância FastMCP fornecida."""
-    base_url = get_settings().localidades_base_url
+    base_url = f"{get_settings().api_base_url}{LOCALIDADES_PATH}"
 
     @mcp.tool()
     async def listar_regioes() -> dict[str, Any]:

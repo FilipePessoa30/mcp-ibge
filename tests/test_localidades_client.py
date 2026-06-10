@@ -6,11 +6,11 @@ import httpx
 import pytest
 import respx
 
-from mcp_ibge.clients.localidades import LocalidadesClient
+from mcp_ibge.clients.localidades import LOCALIDADES_PATH, LocalidadesClient
 from mcp_ibge.config import get_settings
-from mcp_ibge.utils.errors import IBGERequestError
+from mcp_ibge.utils.errors import IBGENotFoundError
 
-BASE_URL = get_settings().localidades_base_url
+BASE_URL = f"{get_settings().api_base_url}{LOCALIDADES_PATH}"
 
 REGIOES = [
     {"id": 1, "sigla": "N", "nome": "Norte"},
@@ -112,7 +112,7 @@ async def test_obter_municipio_404_levanta_erro():
     )
 
     client = LocalidadesClient()
-    with pytest.raises(IBGERequestError) as exc_info:
+    with pytest.raises(IBGENotFoundError) as exc_info:
         await client.obter_municipio("0000000")
 
     assert exc_info.value.status_code == 404

@@ -5,11 +5,13 @@ from __future__ import annotations
 import httpx
 import respx
 
+from mcp_ibge.clients.agregados import AGREGADOS_PATH
+from mcp_ibge.clients.localidades import LOCALIDADES_PATH
 from mcp_ibge.config import get_settings
 from mcp_ibge.server import mcp
 
-LOCALIDADES_BASE_URL = get_settings().localidades_base_url
-AGREGADOS_BASE_URL = get_settings().agregados_base_url
+LOCALIDADES_BASE_URL = f"{get_settings().api_base_url}{LOCALIDADES_PATH}"
+AGREGADOS_BASE_URL = f"{get_settings().api_base_url}{AGREGADOS_PATH}"
 
 EXPECTED_TOOLS = {
     "listar_regioes",

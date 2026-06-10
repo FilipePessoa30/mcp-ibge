@@ -12,7 +12,7 @@ from typing import Any
 
 from ..clients.base import IBGEResult
 from ..schemas.common import build_error_response, build_response
-from ..utils.errors import IBGERequestError
+from ..utils.errors import IBGEClientError
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ async def run_tool(
     """
     try:
         result = await call
-    except IBGERequestError as exc:
+    except IBGEClientError as exc:
         logger.warning("Erro ao consultar %s: %s", exc.url, exc)
         return build_error_response(
             source_url=exc.url, endpoint=exc.url, params=params, error=str(exc)

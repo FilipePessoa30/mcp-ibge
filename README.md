@@ -217,11 +217,10 @@ projeto — veja [.env.example](.env.example).
 
 | Variável | Padrão | Descrição |
 | --- | --- | --- |
-| `MCP_IBGE_LOCALIDADES_BASE_URL` | `https://servicodados.ibge.gov.br/api/v1/localidades` | Base URL da API de Localidades. |
-| `MCP_IBGE_AGREGADOS_BASE_URL` | `https://servicodados.ibge.gov.br/api/v3/agregados` | Base URL da API de Agregados/SIDRA. |
+| `MCP_IBGE_API_BASE_URL` | `https://servicodados.ibge.gov.br/api` | URL base comum às APIs do IBGE; cada cliente acrescenta seu prefixo (`/v1/localidades`, `/v3/agregados`). |
 | `MCP_IBGE_SOURCE_NAME` | `IBGE - Instituto Brasileiro de Geografia e Estatística` | Nome da fonte exibido em `metadata.source_name`. |
-| `MCP_IBGE_USER_AGENT` | `mcp-ibge/0.1 (+https://github.com/your-username/mcp-ibge)` | Header `User-Agent` usado nas requisições. |
-| `MCP_IBGE_TIMEOUT` | `15.0` | Timeout (segundos) para cada requisição HTTP às APIs do IBGE. |
+| `MCP_IBGE_USER_AGENT` | `mcp-ibge/0.1.0` | Header `User-Agent` usado nas requisições. |
+| `MCP_IBGE_TIMEOUT` | `30.0` | Timeout (segundos) para cada requisição HTTP às APIs do IBGE. |
 | `MCP_IBGE_CACHE_ENABLED` | `true` | Habilita/desabilita o cache em memória. |
 | `MCP_IBGE_CACHE_TTL_SECONDS` | `3600.0` | Tempo de vida (segundos) das entradas em cache. |
 | `MCP_IBGE_CACHE_MAX_SIZE` | `256` | Número máximo de respostas em cache simultaneamente. |

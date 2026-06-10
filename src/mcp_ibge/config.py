@@ -18,16 +18,17 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_prefix="MCP_IBGE_", env_file=".env", extra="ignore")
 
-    # URLs base das APIs públicas do IBGE (sem necessidade de chave de API).
-    localidades_base_url: str = "https://servicodados.ibge.gov.br/api/v1/localidades"
-    agregados_base_url: str = "https://servicodados.ibge.gov.br/api/v3/agregados"
+    # URL base comum às APIs públicas do IBGE (sem necessidade de chave de API).
+    # Cada cliente de domínio acrescenta seu próprio prefixo de versão/recurso
+    # (ex.: "/v1/localidades", "/v3/agregados").
+    api_base_url: str = "https://servicodados.ibge.gov.br/api"
 
     # Identificação usada nos metadados de rastreabilidade e no header User-Agent.
     source_name: str = "IBGE - Instituto Brasileiro de Geografia e Estatística"
-    user_agent: str = "mcp-ibge/0.1 (+https://github.com/your-username/mcp-ibge)"
+    user_agent: str = "mcp-ibge/0.1.0"
 
     # Timeout (em segundos) aplicado a cada requisição HTTP às APIs do IBGE.
-    timeout: float = 15.0
+    timeout: float = 30.0
 
     # Cache simples em memória (TTL) para reduzir chamadas repetidas às APIs.
     cache_enabled: bool = True

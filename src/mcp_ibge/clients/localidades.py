@@ -8,15 +8,16 @@ normalização ficam em `mcp_ibge.services.localidades_service`.
 
 from __future__ import annotations
 
-from ..config import get_settings
-from .base import BaseIBGEClient, IBGEResult
+from .base import AsyncIBGEClient, IBGEResult
+
+LOCALIDADES_PATH = "/v1/localidades"
 
 
-class LocalidadesClient(BaseIBGEClient):
+class LocalidadesClient(AsyncIBGEClient):
     """Cliente HTTP para `/localidades` (regiões, estados e municípios)."""
 
     def __init__(self) -> None:
-        super().__init__(get_settings().localidades_base_url)
+        super().__init__(LOCALIDADES_PATH)
 
     async def listar_regioes(self) -> IBGEResult:
         """`GET /regioes` — as 5 grandes regiões geográficas do Brasil."""

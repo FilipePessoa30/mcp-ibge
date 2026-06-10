@@ -5,10 +5,11 @@ from __future__ import annotations
 import httpx
 import respx
 
+from mcp_ibge.clients.localidades import LOCALIDADES_PATH
 from mcp_ibge.config import get_settings
 from mcp_ibge.services.localidades_service import LocalidadesService
 
-BASE_URL = get_settings().localidades_base_url
+BASE_URL = f"{get_settings().api_base_url}{LOCALIDADES_PATH}"
 
 ESTADOS = [
     {

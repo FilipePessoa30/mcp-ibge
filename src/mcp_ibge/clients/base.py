@@ -1,7 +1,7 @@
 """Cliente HTTP assíncrono base, compartilhado por todos os clientes IBGE.
 
 Centraliza timeout, headers, cache opcional e tradução de erros de
-rede/HTTP para `IBGERequestError`.
+rede/HTTP para as exceções de `mcp_ibge.utils.errors`.
 """
 
 from __future__ import annotations
@@ -14,7 +14,13 @@ import httpx
 
 from ..config import get_settings
 from ..utils.cache import get_cache
-from ..utils.errors import IBGERequestError
+from ..utils.errors import (
+    IBGEClientError,
+    IBGENotFoundError,
+    IBGERateLimitError,
+    IBGEServerError,
+    IBGEValidationError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -40,11 +46,31 @@ def _cache_key(url: str, params: dict[str, Any] | None) -> tuple[str, tuple[Any,
     return url, normalized
 
 
-class BaseIBGEClient:
-    """Cliente HTTP assíncrono com timeout e cache, parametrizado por uma URL base."""
+def _error_for_status(exc: httpx.HTTPStatusError, url: str) -> IBGEClientError:
+    status = exc.response.status_code
+    message = f"IBGE retornou HTTP {status} para {url}"
 
-    def __init__(self, base_url: str) -> None:
-        self.base_url = base_url.rstrip("/")
+    if status == 404:
+        return IBGENotFoundError(message, url=url, status_code=status)
+    if status in (400, 422):
+        return IBGEValidationError(message, url=url, status_code=status)
+    if status == 429:
+        return IBGERateLimitError(message, url=url, status_code=status)
+    if status >= 500:
+        return IBGEServerError(message, url=url, status_code=status)
+    return IBGEClientError(message, url=url, status_code=status)
+
+
+class AsyncIBGEClient:
+    """Cliente HTTP assíncrono com timeout e cache, parametrizado por um caminho base.
+
+    `base_path` é combinado com `Settings.api_base_url` para formar a URL
+    base do cliente (ex.: `base_path="/v1/localidades"`).
+    """
+
+    def __init__(self, base_path: str = "") -> None:
+        settings = get_settings()
+        self.base_url = f"{settings.api_base_url.rstrip('/')}{base_path}"
 
     async def get_json(
         self,
@@ -55,8 +81,8 @@ class BaseIBGEClient:
     ) -> Any:
         """Executa um GET em `base_url + path` e retorna o corpo JSON decodificado.
 
-        Levanta `IBGERequestError` em caso de timeout, erro de conexão, status
-        HTTP de erro ou corpo que não seja JSON válido.
+        Levanta uma subclasse de `IBGEClientError` em caso de timeout, erro de
+        conexão, status HTTP de erro ou corpo que não seja JSON válido.
         """
         settings = get_settings()
         url = f"{self.base_url}{path}"
@@ -78,21 +104,15 @@ class BaseIBGEClient:
                 response.raise_for_status()
                 data = response.json()
         except httpx.TimeoutException as exc:
-            raise IBGERequestError(
+            raise IBGEClientError(
                 f"Tempo limite excedido ({settings.timeout}s) ao consultar {url}", url=url
             ) from exc
         except httpx.HTTPStatusError as exc:
-            raise IBGERequestError(
-                f"IBGE retornou HTTP {exc.response.status_code} para {url}",
-                url=url,
-                status_code=exc.response.status_code,
-            ) from exc
+            raise _error_for_status(exc, url) from exc
         except httpx.RequestError as exc:
-            raise IBGERequestError(f"Falha de conexão ao consultar {url}: {exc}", url=url) from exc
+            raise IBGEClientError(f"Falha de conexão ao consultar {url}: {exc}", url=url) from exc
         except ValueError as exc:
-            raise IBGERequestError(
-                f"Resposta inválida (JSON malformado) de {url}", url=url
-            ) from exc
+            raise IBGEServerError(f"Resposta inválida (JSON malformado) de {url}", url=url) from exc
 
         if cache is not None:
             cache.set(key, data)

@@ -19,16 +19,18 @@ não deve conter segredos.
 
 ## Saída de rede
 
-O único tráfego de saída é HTTP(S) para as URLs configuradas em
-`MCP_IBGE_LOCALIDADES_BASE_URL` e `MCP_IBGE_AGREGADOS_BASE_URL` (por padrão,
-`servicodados.ibge.gov.br`). Cada requisição tem timeout configurável
-(`MCP_IBGE_TIMEOUT`) para evitar bloqueios indefinidos.
+O único tráfego de saída é HTTP(S) para a URL configurada em
+`MCP_IBGE_API_BASE_URL` (por padrão, `servicodados.ibge.gov.br`). Cada
+requisição tem timeout configurável (`MCP_IBGE_TIMEOUT`) para evitar
+bloqueios indefinidos.
 
 ## Tratamento de erros
 
 Erros de rede, timeouts, status HTTP de erro e respostas malformadas são
-capturados em `clients/base.py` e convertidos em `IBGERequestError`. A
-camada `tools/` (`run_tool`) converte qualquer exceção em um envelope de
+capturados em `clients/base.py` e convertidos em subclasses de
+`IBGEClientError` (`IBGENotFoundError`, `IBGEValidationError`,
+`IBGERateLimitError`, `IBGEServerError`). A camada `tools/` (`run_tool`)
+converte qualquer exceção em um envelope de
 erro estruturado (`{"metadata": ..., "error": ...}`), sem expor stack traces
 ao cliente MCP nem derrubar o servidor.
 

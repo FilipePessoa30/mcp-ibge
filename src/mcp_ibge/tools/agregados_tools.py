@@ -7,6 +7,7 @@ from typing import Annotated, Any
 from mcp.server.fastmcp import FastMCP
 from pydantic import Field
 
+from ..clients.agregados import AGREGADOS_PATH
 from ..config import get_settings
 from ..services.agregados_service import (
     AGREGADO_POPULACAO_ESTIMADA,
@@ -20,7 +21,7 @@ _service = AgregadosService()
 
 def register(mcp: FastMCP) -> None:
     """Registra as tools de Agregados/SIDRA na instância FastMCP fornecida."""
-    base_url = get_settings().agregados_base_url
+    base_url = f"{get_settings().api_base_url}{AGREGADOS_PATH}"
 
     @mcp.tool()
     async def listar_agregados(

@@ -2,15 +2,15 @@
 
 ## APIs do IBGE utilizadas
 
-Todas as fontes são públicas, gratuitas e **não exigem chave de API**.
+Todas as fontes são públicas, gratuitas e **não exigem chave de API**. Os
+clientes compartilham uma URL base comum (`MCP_IBGE_API_BASE_URL`, padrão
+`https://servicodados.ibge.gov.br/api`) e cada um acrescenta seu próprio
+prefixo de versão/recurso:
 
-| API | Base URL (padrão) | Usada por |
-| --- | --- | --- |
-| Localidades | `https://servicodados.ibge.gov.br/api/v1/localidades` | `clients/localidades.py` |
-| Agregados (SIDRA) | `https://servicodados.ibge.gov.br/api/v3/agregados` | `clients/agregados.py` |
-
-As URLs base são configuráveis via `MCP_IBGE_LOCALIDADES_BASE_URL` e
-`MCP_IBGE_AGREGADOS_BASE_URL` (veja `.env.example`).
+| API | Caminho | URL completa (padrão) | Usada por |
+| --- | --- | --- | --- |
+| Localidades | `/v1/localidades` | `https://servicodados.ibge.gov.br/api/v1/localidades` | `clients/localidades.py` |
+| Agregados (SIDRA) | `/v3/agregados` | `https://servicodados.ibge.gov.br/api/v3/agregados` | `clients/agregados.py` |
 
 Documentação oficial: <https://servicodados.ibge.gov.br/api/docs>.
 

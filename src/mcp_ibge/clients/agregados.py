@@ -21,15 +21,16 @@ from __future__ import annotations
 
 from typing import Any
 
-from ..config import get_settings
-from .base import BaseIBGEClient, IBGEResult
+from .base import AsyncIBGEClient, IBGEResult
+
+AGREGADOS_PATH = "/v3/agregados"
 
 
-class AgregadosClient(BaseIBGEClient):
+class AgregadosClient(AsyncIBGEClient):
     """Cliente HTTP para `/agregados` (tabelas, metadados e dados do SIDRA)."""
 
     def __init__(self) -> None:
-        super().__init__(get_settings().agregados_base_url)
+        super().__init__(AGREGADOS_PATH)
 
     async def listar_agregados(
         self, pesquisa: str | None = None, assunto: str | None = None

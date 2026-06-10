@@ -5,10 +5,10 @@ from __future__ import annotations
 import httpx
 import respx
 
-from mcp_ibge.clients.agregados import AgregadosClient
+from mcp_ibge.clients.agregados import AGREGADOS_PATH, AgregadosClient
 from mcp_ibge.config import get_settings
 
-BASE_URL = get_settings().agregados_base_url
+BASE_URL = f"{get_settings().api_base_url}{AGREGADOS_PATH}"
 
 LISTA_AGREGADOS = [
     {
