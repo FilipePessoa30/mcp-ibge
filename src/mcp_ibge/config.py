@@ -39,6 +39,9 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     transport: str = "stdio"
 
+    # Porta usada quando `transport` é "streamable-http" (ignorada em "stdio").
+    port: int = 8000
+
 
 @lru_cache
 def get_settings() -> Settings:

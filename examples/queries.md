@@ -74,19 +74,33 @@ ou para chamadas diretas via `mcp.call_tool`.
 }
 ```
 
-### Metadados de um agregado (variáveis, períodos, níveis territoriais)
+### Metadados de um agregado (pesquisa, assunto, periodicidade)
 
 ```json
-{ "name": "obter_metadados_agregado", "arguments": { "agregado_id": 6579 } }
+{ "name": "obter_metadados_agregado", "arguments": { "agregado_id": "6579" } }
+```
+
+### Variáveis, períodos e localidades disponíveis em um agregado
+
+```json
+{ "name": "listar_variaveis_agregado", "arguments": { "agregado_id": "6579" } }
+```
+
+```json
+{ "name": "listar_periodos_agregado", "arguments": { "agregado_id": "6579" } }
+```
+
+```json
+{ "name": "listar_localidades_agregado", "arguments": { "agregado_id": "6579", "niveis": "N6" } }
 ```
 
 ### Consultar dados de um agregado para o Brasil
 
 ```json
 {
-  "name": "consultar_dados_agregado",
+  "name": "consultar_agregado",
   "arguments": {
-    "agregado_id": 6579,
+    "agregado_id": "6579",
     "variaveis": "9324",
     "periodos": "-1",
     "localidades": "BR"
@@ -98,9 +112,9 @@ ou para chamadas diretas via `mcp.call_tool`.
 
 ```json
 {
-  "name": "consultar_dados_agregado",
+  "name": "consultar_agregado",
   "arguments": {
-    "agregado_id": 6579,
+    "agregado_id": "6579",
     "variaveis": "9324",
     "localidades": "N6[3550308]"
   }
@@ -109,8 +123,17 @@ ou para chamadas diretas via `mcp.call_tool`.
 
 ## Indicadores
 
-### População estimada de um município
+### População estimada de um município (por nome e UF)
 
 ```json
-{ "name": "obter_populacao_municipio", "arguments": { "codigo_municipio": "3550308" } }
+{ "name": "consultar_populacao_municipio", "arguments": { "nome": "São Paulo", "uf": "SP" } }
+```
+
+### População de um município em um ano específico
+
+```json
+{
+  "name": "consultar_populacao_municipio",
+  "arguments": { "nome": "São Paulo", "uf": "SP", "ano": 2010 }
+}
 ```

@@ -24,8 +24,11 @@ EXPECTED_TOOLS = {
     "listar_distritos",
     "listar_agregados",
     "obter_metadados_agregado",
-    "consultar_dados_agregado",
-    "obter_populacao_municipio",
+    "listar_variaveis_agregado",
+    "listar_periodos_agregado",
+    "listar_localidades_agregado",
+    "consultar_agregado",
+    "consultar_populacao_municipio",
 }
 
 
@@ -70,31 +73,88 @@ async def test_envelope_de_erro_contem_metadata_e_error():
 
 
 @respx.mock
-async def test_consultar_dados_agregado_resolve_alias_br():
-    dados = [{"id": "9324", "resultados": []}]
-    respx.get(f"{AGREGADOS_BASE_URL}/6579/periodos/-1/variaveis/9324").mock(
+async def test_consultar_agregado_resolve_alias_br():
+    dados = [
+        {
+            "id": "9324",
+            "variavel": "População residente estimada",
+            "unidade": "Pessoas",
+            "resultados": [
+                {
+                    "series": [
+                        {
+                            "localidade": {"id": "1", "nome": "Brasil"},
+                            "serie": {"2024": "203080756"},
+                        }
+                    ]
+                }
+            ],
+        }
+    ]
+    respx.get(f"{AGREGADOS_BASE_URL}/6579/periodos/-6/variaveis/9324").mock(
         return_value=httpx.Response(200, json=dados)
     )
 
     _, structured = await mcp.call_tool(
-        "consultar_dados_agregado",
-        {"agregado_id": 6579, "variaveis": "9324", "localidades": "BR"},
+        "consultar_agregado",
+        {"agregado_id": "6579", "variaveis": "9324", "localidades": "BR"},
     )
 
-    assert structured["data"] == dados
+    assert structured["data"][0]["localidade_id"] == "1"
+    assert structured["data"][0]["valor"] == 203080756.0
     assert structured["metadata"]["params"]["localidades"] == "N1[all]"
 
 
 @respx.mock
-async def test_obter_populacao_municipio_envelope():
+async def test_consultar_populacao_municipio_envelope():
+    municipio = {
+        "id": 4205407,
+        "nome": "Florianópolis",
+        "microrregiao": {
+            "id": 42017,
+            "nome": "Florianópolis",
+            "mesorregiao": {
+                "id": 4202,
+                "nome": "Grande Florianópolis",
+                "UF": {
+                    "id": 42,
+                    "sigla": "SC",
+                    "nome": "Santa Catarina",
+                    "regiao": {"id": 4, "sigla": "S", "nome": "Sul"},
+                },
+            },
+        },
+    }
+    respx.get(f"{LOCALIDADES_BASE_URL}/estados/SC/municipios").mock(
+        return_value=httpx.Response(200, json=[municipio])
+    )
+
     endpoint = f"{AGREGADOS_BASE_URL}/6579/periodos/-1/variaveis/9324"
-    dados = [{"id": "9324", "resultados": []}]
+    dados = [
+        {
+            "id": "9324",
+            "unidade": "Pessoas",
+            "resultados": [
+                {
+                    "series": [
+                        {
+                            "localidade": {"id": "4205407", "nome": "Florianópolis"},
+                            "serie": {"2024": "537000"},
+                        }
+                    ]
+                }
+            ],
+        }
+    ]
     respx.get(endpoint).mock(return_value=httpx.Response(200, json=dados))
 
     _, structured = await mcp.call_tool(
-        "obter_populacao_municipio", {"codigo_municipio": "4205407"}
+        "consultar_populacao_municipio", {"nome": "Florianópolis", "uf": "SC"}
     )
 
-    assert structured["data"] == dados
+    assert structured["data"][0]["localidade_nome"] == "Florianópolis"
+    assert structured["data"][0]["valor"] == 537000.0
     assert structured["metadata"]["endpoint"] == endpoint
-    assert structured["metadata"]["params"]["codigo_municipio"] == "4205407"
+    assert structured["metadata"]["params"]["codigo_municipio"] == 4205407
+    assert structured["metadata"]["params"]["nome"] == "Florianópolis"
+    assert structured["metadata"]["params"]["uf"] == "SC"

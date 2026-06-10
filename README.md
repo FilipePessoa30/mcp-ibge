@@ -103,18 +103,28 @@ uv run mcp-ibge
 | Tool | Descrição |
 | --- | --- |
 | `listar_agregados` | Lista tabelas/agregados do SIDRA, com filtros por pesquisa, assunto ou texto. |
-| `obter_metadados_agregado` | Metadados de um agregado: variáveis, períodos e níveis territoriais disponíveis. |
-| `consultar_dados_agregado` | Consulta valores de um agregado para variáveis, períodos e localidades específicas. |
+| `obter_metadados_agregado` | Metadados de um agregado: pesquisa, assunto e periodicidade (JSON completo em `raw`). |
+| `listar_variaveis_agregado` | Lista as variáveis disponíveis em um agregado. |
+| `listar_periodos_agregado` | Lista os períodos disponíveis para consulta em um agregado. |
+| `listar_localidades_agregado` | Lista as localidades disponíveis para um agregado em um ou mais níveis territoriais. |
+| `consultar_agregado` | Consulta valores de um agregado para variáveis, períodos e localidades específicas. |
 
 ### Indicadores
 
 | Tool | Descrição |
 | --- | --- |
-| `obter_populacao_municipio` | População residente estimada mais recente de um município (agregado SIDRA 6579). |
+| `consultar_populacao_municipio` | População residente estimada de um município por nome e UF (resolve o código IBGE via Localidades; agregado SIDRA "Estimativas de população residente"). |
 
 Veja [docs/tools.md](docs/tools.md) para a descrição completa de argumentos
 de cada tool e [examples/queries.md](examples/queries.md) para exemplos de
 chamadas.
+
+### Resources e prompts
+
+| Tipo | Nome | Descrição |
+| --- | --- | --- |
+| Resource | `ibge://status` | Status do servidor: versão, lista de tools disponíveis e horário (UTC) da consulta. |
+| Prompt | `comparar_municipios` | Orienta a comparação de um indicador entre municípios usando as tools acima, sempre citando fonte, ano/período, unidade territorial e limitações dos dados. |
 
 ### Exemplos de uso
 
@@ -145,7 +155,7 @@ encontrados, pedindo para refinar a busca.
 
 ```jsonc
 // Chamada
-obter_populacao_municipio(codigo_municipio="4205407")
+consultar_populacao_municipio(nome="Florianópolis", uf="SC")
 
 // Resposta (resumida)
 {
@@ -154,33 +164,38 @@ obter_populacao_municipio(codigo_municipio="4205407")
     "source_url": "https://servicodados.ibge.gov.br/api/v3/agregados/6579/periodos/-1/variaveis/9324",
     "retrieved_at": "2026-06-10T12:00:01Z",
     "endpoint": "https://servicodados.ibge.gov.br/api/v3/agregados/6579/periodos/-1/variaveis/9324",
-    "params": {"codigo_municipio": "4205407", "localidades": "N6[4205407]"}
+    "params": {"nome": "Florianópolis", "uf": "SC", "codigo_municipio": 4205407, "agregado_id": "6579", "variaveis": "9324", "periodos": "-1", "localidades": "N6[4205407]"}
   },
   "data": [
     {
-      "id": "9324",
-      "variavel": "População residente estimada",
+      "agregado_id": "6579",
+      "variavel_id": "9324",
+      "localidade_id": "4205407",
+      "localidade_nome": "Florianópolis",
+      "periodo": "2024",
+      "valor": 537062.0,
       "unidade": "Pessoas",
-      "resultados": [
-        {
-          "series": [
-            {
-              "localidade": {"id": "4205407", "nome": "Florianópolis"},
-              "serie": {"2024": "537062"}
-            }
-          ]
-        }
-      ]
+      "raw": { "...": "..." }
     }
+  ],
+  "warnings": [
+    "Nenhum \"ano\" foi informado: retornado o período mais recente disponível no SIDRA (\"2024\"), que pode não ser o ano corrente."
   ]
 }
 ```
 
+Use o argumento opcional `ano` (ex.:
+`consultar_populacao_municipio(nome="Florianópolis", uf="SC", ano=2010)`)
+para consultar um período específico em vez do mais recente. Se `nome` for
+ambíguo dentro da UF, ou se nenhum município corresponder, a resposta vem
+como erro com os candidatos encontrados (mesma busca de
+`obter_codigo_municipio`).
+
 **3. Consultar um agregado do SIDRA para todos os estados**
 
 ```jsonc
-consultar_dados_agregado(
-  agregado_id=6579,
+consultar_agregado(
+  agregado_id="6579",
   variaveis="9324",
   periodos="-1",
   localidades="N3[all]"
@@ -226,6 +241,7 @@ projeto — veja [.env.example](.env.example).
 | `MCP_IBGE_CACHE_MAX_SIZE` | `256` | Número máximo de respostas em cache simultaneamente. |
 | `MCP_IBGE_LOG_LEVEL` | `INFO` | Nível de log (`DEBUG`, `INFO`, `WARNING`, ...). Logs sempre vão para stderr. |
 | `MCP_IBGE_TRANSPORT` | `stdio` | Transporte MCP (`stdio` ou `streamable-http`). |
+| `MCP_IBGE_PORT` | `8000` | Porta usada quando `MCP_IBGE_TRANSPORT=streamable-http` (ignorada em `stdio`). |
 
 ## Integração com clientes MCP
 
@@ -256,7 +272,7 @@ ajustando `--directory` para o caminho absoluto do projeto:
 ```
 
 Reinicie o Claude Desktop. As tools `listar_estados`, `obter_municipio_por_codigo`,
-`consultar_dados_agregado` etc. ficarão disponíveis nas conversas.
+`consultar_agregado` etc. ficarão disponíveis nas conversas.
 
 ### Cursor
 
@@ -341,10 +357,11 @@ detalhada de cada camada e do fluxo de uma chamada.
   (`servicodados.ibge.gov.br`), que é pública e não requer autenticação.
 - O cache em memória é local ao processo e não persiste entre execuções —
   serve apenas para evitar chamadas repetidas durante uma mesma sessão.
-- A tool `consultar_dados_agregado` espelha a sintaxe da API SIDRA
-  (parâmetros `periodos` e `localidades`); use `obter_metadados_agregado`
-  para descobrir os IDs válidos de variáveis, períodos e níveis territoriais
-  de cada agregado.
+- A tool `consultar_agregado` espelha a sintaxe da API SIDRA (parâmetros
+  `periodos` e `localidades`) e retorna uma lista achatada de valores; use
+  `listar_variaveis_agregado`, `listar_periodos_agregado` e
+  `listar_localidades_agregado` para descobrir os IDs válidos de cada
+  agregado.
 
 ## Licença
 
