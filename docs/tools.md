@@ -17,8 +17,9 @@ do IBGE) usada.
 6. [`obter_municipio_por_codigo`](#6-obter_municipio_por_codigo)
 7. [`listar_distritos`](#7-listar_distritos)
 
-**Agregados / SIDRA** (experimental na v0.1.0 — funcionais e testadas, mas a
-interface pode mudar antes de serem marcadas como estáveis)
+**Agregados / SIDRA** (estável a partir da v0.2.0 — veja
+[Como descobrir agregado, variável, período e localidade](#como-descobrir-agregado-variável-período-e-localidade)
+antes de usar)
 
 8. [`listar_agregados`](#8-listar_agregados)
 9. [`obter_metadados_agregado`](#9-obter_metadados_agregado)
@@ -26,6 +27,9 @@ interface pode mudar antes de serem marcadas como estáveis)
 11. [`listar_periodos_agregado`](#11-listar_periodos_agregado)
 12. [`listar_localidades_agregado`](#12-listar_localidades_agregado)
 13. [`consultar_agregado`](#13-consultar_agregado)
+
+**Indicadores** (experimental)
+
 14. [`consultar_populacao_municipio`](#14-consultar_populacao_municipio)
 
 ## Formato da resposta
@@ -512,10 +516,93 @@ Mais os [erros comuns a todas as tools](#erros-comuns-a-todas-as-tools).
 
 ## Agregados / SIDRA
 
-> **Experimental na v0.1.0**: estas tools são funcionais e têm cobertura de
-> testes, mas sua interface (parâmetros, formatos aceitos) ainda pode mudar
-> em versões futuras antes de serem marcadas como estáveis. Veja o
-> [Roadmap no README](../README.md#roadmap).
+A partir da v0.2.0, estas 6 tools (`listar_agregados`,
+`obter_metadados_agregado`, `listar_variaveis_agregado`,
+`listar_periodos_agregado`, `listar_localidades_agregado` e
+`consultar_agregado`) são consideradas **estáveis**: cobrem o acesso genérico
+a qualquer agregado (tabela) do SIDRA — descoberta de metadados e consulta de
+dados — e têm cobertura de testes completa. O indicador
+[`consultar_populacao_municipio`](#14-consultar_populacao_municipio) continua
+**experimental**, por depender de um agregado e variável fixos que o IBGE
+pode descontinuar/renomear após um novo Censo.
+
+### Como descobrir agregado, variável, período e localidade
+
+O SIDRA tem milhares de agregados (tabelas), cada um com seu próprio conjunto
+de variáveis, períodos, classificações e níveis territoriais. Antes de chamar
+[`consultar_agregado`](#13-consultar_agregado), use as tools de metadados
+nesta ordem:
+
+1. **Encontrar o agregado** — [`listar_agregados`](#8-listar_agregados) com
+   `pesquisa` (ex.: `"Índice Nacional de Preços ao Consumidor Amplo"`),
+   `assunto` (ex.: `"Índices de preços"`) e/ou `texto` (filtro local pelo
+   nome) para descobrir o `agregado_id`.
+2. **Confirmar o agregado e ver o panorama geral** —
+   [`obter_metadados_agregado`](#9-obter_metadados_agregado) com o
+   `agregado_id` retorna `pesquisa`, `assunto`, `periodicidade` e, em `raw`,
+   a lista completa de variáveis, classificações e níveis territoriais
+   suportados (`nivelTerritorial`).
+3. **Escolher a(s) variável(is)** —
+   [`listar_variaveis_agregado`](#10-listar_variaveis_agregado) retorna
+   `id`, `nome` e `unidade` de cada variável. O `id` vai no parâmetro
+   `variaveis` de `consultar_agregado` (um ID, vários separados por vírgula,
+   ou `"all"`).
+4. **Escolher o(s) período(s)** —
+   [`listar_periodos_agregado`](#11-listar_periodos_agregado) retorna os
+   períodos disponíveis (ex.: `"202604"` para abril/2026 em um agregado
+   mensal, `"2024"` para um agregado anual). O `id` vai no parâmetro
+   `periodos` — que também aceita um intervalo (`"2010-2020"`), uma lista
+   (`"2019,2021"`) ou um valor relativo (`"-1"` = último período disponível,
+   `"-6"` = últimos 6 períodos).
+5. **Escolher a(s) localidade(s)** —
+   [`listar_localidades_agregado`](#12-listar_localidades_agregado) com um
+   `niveis` (ex.: `"N1"` = Brasil, `"N3"` = estados, `"N6"` = municípios,
+   conforme o que aparecer em `nivelTerritorial` no passo 2) retorna `id` e
+   `nome` de cada localidade disponível **para aquele agregado**. O `id` vai
+   no parâmetro `localidades` de `consultar_agregado`, no formato
+   `N<nivel>[<id1>,<id2>,...]` (ou `N<nivel>[all]` para todas).
+6. **Consultar os dados** —
+   [`consultar_agregado`](#13-consultar_agregado) com `agregado_id`,
+   `variaveis`, `localidades` e `periodos` resolvidos nos passos anteriores.
+   Se o agregado tiver classificações (visíveis em `raw.classificacoes` no
+   passo 2), use o parâmetro `classificacao` no formato
+   `"<id_classificacao>[<id_categoria>]"`.
+
+#### Exemplo completo: variação mensal do IPCA (agregado `7060`)
+
+```python
+# 1. Encontrar o agregado
+listar_agregados(pesquisa="Índice Nacional de Preços ao Consumidor Amplo", texto="a partir de janeiro/2020")
+# -> agregado_id = "7060"
+
+# 2. Confirmar metadados (variáveis, classificações, níveis territoriais)
+obter_metadados_agregado(agregado_id="7060")
+# -> variável "63" = "IPCA - Variação mensal" (%)
+# -> classificação "315" tem a categoria "7169" = "Índice geral"
+# -> nivelTerritorial.Administrativo = ["N1", "N6", "N7"]
+
+# 3. Variáveis disponíveis
+listar_variaveis_agregado(agregado_id="7060")
+
+# 4. Períodos disponíveis (ex.: "202604" = abril/2026)
+listar_periodos_agregado(agregado_id="7060")
+
+# 5. Localidades disponíveis no nível Brasil
+listar_localidades_agregado(agregado_id="7060", niveis="N1")
+
+# 6. Consultar a variação mensal do IPCA (índice geral) no Brasil, último período
+consultar_agregado(
+    agregado_id="7060",
+    variaveis="63",
+    localidades="N1[all]",
+    periodos="-1",
+    classificacao="315[7169]",
+)
+```
+
+A consulta do passo 6 retorna, por exemplo, `valor: 0.67` (variação mensal de
+0,67% em abril/2026), com `unidade: "%"`, `localidade_nome: "Brasil"` e
+`periodo: "202604"`.
 
 ### 8. `listar_agregados`
 
@@ -833,7 +920,11 @@ um com `agregado_id`, `variavel_id`, `localidade_id`, `localidade_nome`,
 SIDRA — marcadores `"-"`, `".."`, `"..."`, `"X"`) e `unidade`. O item de série
 original da API fica em `raw`.
 
-> Para descobrir IDs válidos de variáveis, períodos e localidades, use
+> Para descobrir IDs válidos de agregado, variáveis, períodos e localidades,
+> siga [Como descobrir agregado, variável, período e
+> localidade](#como-descobrir-agregado-variável-período-e-localidade), usando
+> [`listar_agregados`](#8-listar_agregados),
+> [`obter_metadados_agregado`](#9-obter_metadados_agregado),
 > [`listar_variaveis_agregado`](#10-listar_variaveis_agregado),
 > [`listar_periodos_agregado`](#11-listar_periodos_agregado) e
 > [`listar_localidades_agregado`](#12-listar_localidades_agregado).

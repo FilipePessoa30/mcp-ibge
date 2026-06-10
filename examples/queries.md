@@ -84,6 +84,10 @@ chamar uma ou mais das tools listadas abaixo.
 
 ## Agregados / SIDRA
 
+Veja também [docs/tools.md](../docs/tools.md#como-descobrir-agregado-variável-período-e-localidade)
+para o guia completo de como descobrir agregado, variável, período e
+localidade antes de chamar `consultar_agregado`.
+
 ### Listar agregados disponíveis com filtro textual
 
 ```json
@@ -136,6 +140,56 @@ chamar uma ou mais das tools listadas abaixo.
     "agregado_id": "6579",
     "variaveis": "9324",
     "localidades": "N6[3550308]"
+  }
+}
+```
+
+### Fluxo de descoberta completo: variação mensal do IPCA (agregado `7060`)
+
+Exemplo real de ponta a ponta — do agregado `1419` em diante o IBGE
+descontinua tabelas e abre novas (a tabela `7060` é a vigente desde
+janeiro/2020). Use `listar_agregados` para confirmar qual está ativa caso
+estes IDs mudem no futuro.
+
+```json
+{
+  "name": "listar_agregados",
+  "arguments": {
+    "pesquisa": "Índice Nacional de Preços ao Consumidor Amplo",
+    "texto": "a partir de janeiro/2020"
+  }
+}
+```
+
+```json
+{ "name": "obter_metadados_agregado", "arguments": { "agregado_id": "7060" } }
+```
+
+```json
+{ "name": "listar_variaveis_agregado", "arguments": { "agregado_id": "7060" } }
+```
+
+```json
+{ "name": "listar_periodos_agregado", "arguments": { "agregado_id": "7060" } }
+```
+
+```json
+{ "name": "listar_localidades_agregado", "arguments": { "agregado_id": "7060", "niveis": "N1" } }
+```
+
+A consulta final usa a variável `63` ("IPCA - Variação mensal", em `%`), a
+classificação `315` com a categoria `7169` ("Índice geral"), e o nível
+territorial `N1` (Brasil):
+
+```json
+{
+  "name": "consultar_agregado",
+  "arguments": {
+    "agregado_id": "7060",
+    "variaveis": "63",
+    "localidades": "N1[all]",
+    "periodos": "-1",
+    "classificacao": "315[7169]"
   }
 }
 ```

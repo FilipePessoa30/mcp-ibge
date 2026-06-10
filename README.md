@@ -16,12 +16,14 @@ locations (regions, states, municipalities, districts), **SIDRA** statistical
 aggregates, and **population** indicators — ready to be called by Claude
 Desktop, Cursor and any other MCP-compatible agent.
 
-> **v0.1.0 status**: the **Localidades** tools (regions, states,
-> municipalities, districts and code resolution) are the stable, fully
-> tested core of this release. **Agregados/SIDRA** tools and the population
-> indicator are included as **experimental previews** — they work and are
-> tested, but their interface may still change before being marked stable
-> (see [Roadmap](#roadmap)).
+> **v0.2.0 status**: the **Localidades** tools (regions, states,
+> municipalities, districts and code resolution) and the **Agregados/SIDRA**
+> tools (generic discovery and query of any SIDRA aggregate) are the stable,
+> fully tested core of this release. The **population indicator**
+> (`consultar_populacao_municipio`) is included as an **experimental
+> preview** — it works and is tested, but it depends on a fixed aggregate/
+> variable that the IBGE may discontinue or rename after a new Census (see
+> [Roadmap](#roadmap)).
 
 ## Quick demo
 
@@ -58,8 +60,9 @@ JSON response with full source metadata so the answer can be verified.
 
 - **Localidades API tools** (stable) — regions, states, municipalities and
   districts, with codes and hierarchy resolved.
-- **Agregados/SIDRA tools** (experimental) — list aggregates, inspect
-  metadata, variables, periods and locations, and query data.
+- **Agregados/SIDRA tools** (stable) — generic discovery and query of any
+  SIDRA aggregate: list aggregates, inspect metadata, variables, periods and
+  locations, and query data.
 - **Population indicator** (experimental) —
   `consultar_populacao_municipio`, built on top of Agregados/SIDRA.
 - **Municipality code resolution** — fuzzy, accent- and case-insensitive
@@ -183,7 +186,7 @@ variables (prefix `MCP_IBGE_`) or a `.env` file — see
 | --- | --- | --- |
 | `MCP_IBGE_API_BASE_URL` | `https://servicodados.ibge.gov.br/api` | Base URL shared by the IBGE APIs. Restricted to official IBGE domains (`https://servicodados.ibge.gov.br`) — see [docs/security.md](docs/security.md). |
 | `MCP_IBGE_SOURCE_NAME` | `IBGE - Instituto Brasileiro de Geografia e Estatística` | Name shown in `metadata.source_name`. |
-| `MCP_IBGE_USER_AGENT` | `mcp-ibge/0.1.0` | `User-Agent` header used for IBGE requests. |
+| `MCP_IBGE_USER_AGENT` | `mcp-ibge/0.2.0` | `User-Agent` header used for IBGE requests. |
 | `MCP_IBGE_TIMEOUT` | `30.0` | HTTP timeout (seconds) for each IBGE request. |
 | `MCP_IBGE_MAX_RESPONSE_SIZE_BYTES` | `5000000` | Maximum response body size (bytes) accepted from the IBGE API. |
 | `MCP_IBGE_CACHE_ENABLED` | `true` | Enable/disable the in-memory cache. |
@@ -214,19 +217,21 @@ include a `warnings` list when a search is ambiguous. See
 | `obter_municipio_por_codigo` | Get municipality details by IBGE code, with state and region resolved. | `obter_municipio_por_codigo(codigo_ibge=3303302)` |
 | `listar_distritos` | List the districts of a municipality by IBGE code. | `listar_distritos(codigo_municipio=3304557)` |
 
-### Agregados / SIDRA (experimental)
+### Agregados / SIDRA
 
-> These tools are functional and tested, but their interface may still
-> change in a future release before being marked stable.
+> Generic discovery and query tools for **any** SIDRA aggregate (table). See
+> [docs/tools.md](docs/tools.md#como-descobrir-agregado-variável-período-e-localidade)
+> for a step-by-step guide on how to discover an aggregate, its variables,
+> periods and locations before calling `consultar_agregado`.
 
 | Tool | Description | Example |
 | --- | --- | --- |
 | `listar_agregados` | List SIDRA aggregates (tables), filterable by survey, subject or text. | `listar_agregados(assunto="População")` |
-| `obter_metadados_agregado` | Get metadata for an aggregate: survey, subject, periodicity (full JSON in `raw`). | `obter_metadados_agregado(agregado_id="6579")` |
+| `obter_metadados_agregado` | Get metadata for an aggregate: survey, subject, periodicity, variables, classifications and territorial levels (full JSON in `raw`). | `obter_metadados_agregado(agregado_id="6579")` |
 | `listar_variaveis_agregado` | List the variables available in an aggregate. | `listar_variaveis_agregado(agregado_id="6579")` |
 | `listar_periodos_agregado` | List the periods available for an aggregate. | `listar_periodos_agregado(agregado_id="6579")` |
 | `listar_localidades_agregado` | List the locations available for an aggregate at one or more territorial levels. | `listar_localidades_agregado(agregado_id="6579", niveis="N6")` |
-| `consultar_agregado` | Query an aggregate's values for given variables, periods and locations. | `consultar_agregado(agregado_id="6579", variaveis="9324", periodos="-1", localidades="N6[3303302]")` |
+| `consultar_agregado` | Query an aggregate's values for given variables, periods, locations and (optionally) classifications. | `consultar_agregado(agregado_id="7060", variaveis="63", localidades="N1[all]", periodos="-1", classificacao="315[7169]")` |
 
 ### Indicators (experimental)
 
@@ -256,14 +261,23 @@ considerations.
 
 ## Roadmap
 
-- [x] **v0.1.0** (current) — Localidades tools (regions, states,
-  municipalities, districts, fuzzy search and code resolution): **stable**,
-  with full test coverage, README, configuration examples and CI.
-  Agregados/SIDRA tools, the population indicator and the
-  `comparar_municipios` prompt are included as **experimental previews**.
-- [ ] **v0.2.0** — Stabilize Agregados/SIDRA tools and the population
-  indicator (promote from experimental to stable) based on real-world usage
-  and feedback.
+- [x] **v0.1.0** — Localidades tools (regions, states, municipalities,
+  districts, fuzzy search and code resolution): **stable**, with full test
+  coverage, README, configuration examples and CI. Agregados/SIDRA tools, the
+  population indicator and the `comparar_municipios` prompt were included as
+  **experimental previews**.
+- [x] **v0.2.0** (current) — Initial Agregados/SIDRA support promoted to
+  **stable**: `listar_agregados`, `obter_metadados_agregado`,
+  `listar_variaveis_agregado`, `listar_periodos_agregado`,
+  `listar_localidades_agregado` and `consultar_agregado` cover generic
+  discovery and query of any SIDRA aggregate, with a documented discovery
+  workflow and real worked examples (see
+  [docs/tools.md](docs/tools.md#como-descobrir-agregado-variável-período-e-localidade)).
+  The population indicator (`consultar_populacao_municipio`) and the
+  `comparar_municipios` prompt remain **experimental**.
+- [ ] **v0.2.1** — Stabilize the population indicator
+  (`consultar_populacao_municipio`) and the `comparar_municipios` prompt
+  based on real-world usage and feedback.
 - [ ] **v0.3.0** — Census helpers: dedicated tools for Census-specific
   aggregates and classifications.
 - [ ] **v0.4.0** — Geographic meshes: municipality/state boundary geometries
@@ -298,11 +312,14 @@ fonte (`source_name`, `source_url`, `endpoint`, `params`, `retrieved_at`) para
 conferência na fonte oficial. Veja [docs/client_setup.md](docs/client_setup.md)
 para um guia de configuração com perguntas de teste em português.
 
-**Status na v0.1.0**: as *tools* de **Localidades** são o núcleo estável e
-totalmente testado desta versão. As *tools* de **Agregados/SIDRA** e o
-indicador de população são entregues como **experimentais** — funcionam e
-têm testes, mas a interface ainda pode mudar antes de serem marcadas como
-estáveis.
+**Status na v0.2.0**: as *tools* de **Localidades** e o suporte inicial a
+**Agregados/SIDRA** (descoberta e consulta genérica de qualquer agregado:
+`listar_agregados`, `obter_metadados_agregado`, `listar_variaveis_agregado`,
+`listar_periodos_agregado`, `listar_localidades_agregado` e
+`consultar_agregado`) são o núcleo **estável** e totalmente testado desta
+versão. O indicador de população (`consultar_populacao_municipio`) continua
+**experimental** — funciona e tem testes, mas depende de um agregado e
+variável fixos que o IBGE pode descontinuar/renomear após um novo Censo.
 
 ## Contributing
 

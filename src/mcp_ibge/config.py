@@ -32,7 +32,7 @@ class Settings(BaseSettings):
 
     # Identificação usada nos metadados de rastreabilidade e no header User-Agent.
     source_name: str = "IBGE - Instituto Brasileiro de Geografia e Estatística"
-    user_agent: str = "mcp-ibge/0.1.0"
+    user_agent: str = "mcp-ibge/0.2.0"
 
     # Timeout (em segundos) aplicado a cada requisição HTTP às APIs do IBGE.
     timeout: float = 30.0

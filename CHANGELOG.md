@@ -5,6 +5,48 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-06-10
+
+Initial **Agregados/SIDRA** support, promoted to stable. Focus: generic
+discovery and query of any SIDRA aggregate, with documentation on how to find
+the right IDs and real worked examples.
+
+### Added
+
+- **Agregados/SIDRA tools promoted to stable**: `listar_agregados`,
+  `obter_metadados_agregado`, `listar_variaveis_agregado`,
+  `listar_periodos_agregado`, `listar_localidades_agregado` and
+  `consultar_agregado` are now considered stable, with full test coverage
+  (clients, services, tools and schemas, all mocked with `respx`).
+- **Discovery guide** in `docs/tools.md`
+  ("Como descobrir agregado, variável, período e localidade"): a step-by-step
+  workflow (`listar_agregados` → `obter_metadados_agregado` →
+  `listar_variaveis_agregado` → `listar_periodos_agregado` →
+  `listar_localidades_agregado` → `consultar_agregado`), including how to
+  read `nivelTerritorial` and `classificacoes` from `obter_metadados_agregado`.
+- **Real worked example**: end-to-end discovery and query of the IPCA
+  monthly variation (aggregate `7060`, variable `63`, classification
+  `315[7169]`, level `N1`) added to `docs/tools.md` and
+  `examples/queries.md`, alongside the existing population estimates example
+  (aggregate `6579`).
+
+### Changed
+
+- README and `docs/tools.md` updated: the 6 core Agregados/SIDRA tools are no
+  longer marked "experimental". `consultar_populacao_municipio` and the
+  `comparar_municipios` prompt remain **experimental**, since they depend on
+  a fixed aggregate/variable that the IBGE may discontinue or rename after a
+  new Census.
+- `User-Agent` default bumped to `mcp-ibge/0.2.0`.
+
+### Known limitations
+
+- `consultar_populacao_municipio` and the `comparar_municipios` prompt remain
+  **experimental** (see [Roadmap](README.md#roadmap)).
+- The `streamable-http` transport is suitable for local/trusted use; it has
+  not yet been hardened for public/remote deployments (see
+  [docs/security.md](docs/security.md)).
+
 ## [0.1.0] - 2026-06-10
 
 Initial public release. Focus: a stable, fully tested **Localidades** MCP

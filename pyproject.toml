@@ -1,6 +1,6 @@
 [project]
 name = "mcp-ibge"
-version = "0.1.0"
+version = "0.2.0"
 description = "Servidor MCP (Model Context Protocol) para consultar dados públicos e oficiais do IBGE: localidades, agregados/SIDRA e indicadores de população."
 readme = "README.md"
 requires-python = ">=3.11"
