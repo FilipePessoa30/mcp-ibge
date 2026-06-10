@@ -21,7 +21,7 @@ from __future__ import annotations
 import logging
 from datetime import UTC, datetime
 from importlib.metadata import version
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal, cast
 
 from mcp.server.fastmcp import FastMCP
 from pydantic import Field
@@ -111,7 +111,8 @@ def main() -> None:
     """Configura logging e inicia o servidor MCP."""
     configure_logging()
     logging.getLogger(__name__).info("Iniciando mcp-ibge (transporte=%s)", _settings.transport)
-    mcp.run(transport=_settings.transport)
+    transport = cast("Literal['stdio', 'sse', 'streamable-http']", _settings.transport)
+    mcp.run(transport=transport)
 
 
 if __name__ == "__main__":

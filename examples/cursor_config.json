@@ -14,9 +14,7 @@
         "--directory",
         "/caminho/absoluto/para/mcp-ibge",
         "run",
-        "python",
-        "-m",
-        "mcp_ibge.server"
+        "mcp-ibge"
       ]
     }
   }

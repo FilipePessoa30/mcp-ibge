@@ -106,6 +106,26 @@ async def test_consultar_agregado_resolve_alias_br():
 
 
 @respx.mock
+async def test_consultar_populacao_municipio_niteroi(municipio_niteroi, agregado_consulta_resposta):
+    respx.get(f"{LOCALIDADES_BASE_URL}/estados/RJ/municipios").mock(
+        return_value=httpx.Response(200, json=[municipio_niteroi])
+    )
+
+    endpoint = f"{AGREGADOS_BASE_URL}/6579/periodos/-1/variaveis/9324"
+    respx.get(endpoint).mock(return_value=httpx.Response(200, json=agregado_consulta_resposta))
+
+    _, structured = await mcp.call_tool(
+        "consultar_populacao_municipio", {"nome": "Niterói", "uf": "RJ"}
+    )
+
+    assert structured["data"][0]["localidade_nome"] == "Niterói"
+    assert structured["data"][0]["valor"] == 516981.0
+    assert structured["metadata"]["endpoint"] == endpoint
+    assert structured["metadata"]["params"]["codigo_municipio"] == 3303302
+    assert structured["metadata"]["params"]["uf"] == "RJ"
+
+
+@respx.mock
 async def test_consultar_populacao_municipio_envelope():
     municipio = {
         "id": 4205407,

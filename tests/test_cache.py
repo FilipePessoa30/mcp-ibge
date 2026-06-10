@@ -4,7 +4,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+import httpx
+import respx
+
+from mcp_ibge.clients.localidades import LOCALIDADES_PATH, LocalidadesClient
+from mcp_ibge.config import get_settings
 from mcp_ibge.utils.cache import TTLCache, clear_cache, get_cache
+
+BASE_URL = f"{get_settings().api_base_url}{LOCALIDADES_PATH}"
 
 
 @dataclass
@@ -94,3 +101,18 @@ def test_get_cache_retorna_singleton(monkeypatch):
     clear_cache()
 
     assert get_cache() is get_cache()
+
+
+@respx.mock
+async def test_cliente_usa_cache_para_estado_rj(estado_rj):
+    route = respx.get(f"{BASE_URL}/estados/RJ").mock(
+        return_value=httpx.Response(200, json=estado_rj)
+    )
+
+    client = LocalidadesClient()
+    primeira = await client.get_estado("RJ")
+    segunda = await client.get_estado("RJ")
+
+    assert primeira.data == estado_rj
+    assert segunda.data == estado_rj
+    assert route.call_count == 1

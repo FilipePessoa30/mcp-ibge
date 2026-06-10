@@ -269,3 +269,46 @@ async def test_listar_distritos():
     assert result.ok is True
     assert result.data[0].nome == "Sé"
     assert result.data[0].municipio_id == 3550308
+
+
+@respx.mock
+async def test_obter_estado_rj(estado_rj):
+    respx.get(f"{BASE_URL}/estados/RJ").mock(return_value=httpx.Response(200, json=estado_rj))
+
+    result = await LocalidadesService().obter_estado("RJ")
+
+    assert result.ok is True
+    assert result.data is not None
+    assert result.data.sigla == "RJ"
+    assert result.data.regiao is not None
+    assert result.data.regiao.sigla == "SE"
+
+
+@respx.mock
+async def test_obter_municipio_niteroi_por_codigo(municipio_niteroi):
+    respx.get(f"{BASE_URL}/municipios/3303302").mock(
+        return_value=httpx.Response(200, json=municipio_niteroi)
+    )
+
+    result = await LocalidadesService().obter_municipio_por_codigo(3303302)
+
+    assert result.ok is True
+    assert result.data is not None
+    assert result.data.nome == "Niterói"
+    assert result.data.uf_sigla == "RJ"
+    assert result.data.regiao_nome == "Sudeste"
+
+
+@respx.mock
+async def test_buscar_municipio_sao_jose_ambiguo_no_brasil(municipios_sao_jose_ambiguo):
+    respx.get(f"{BASE_URL}/municipios").mock(
+        return_value=httpx.Response(200, json=municipios_sao_jose_ambiguo)
+    )
+
+    result = await LocalidadesService().buscar_municipio("São José")
+
+    assert result.ok is True
+    assert {m.nome for m in result.data} == {"São José dos Campos", "São José dos Pinhais"}
+    assert {m.uf_sigla for m in result.data} == {"SP", "PR"}
+    assert result.warnings
+    assert "São José" in result.warnings[0]

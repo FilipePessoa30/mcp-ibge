@@ -1,5 +1,7 @@
 # mcp-ibge
 
+[![CI](https://github.com/your-username/mcp-ibge/actions/workflows/ci.yml/badge.svg)](https://github.com/your-username/mcp-ibge/actions/workflows/ci.yml)
+
 Servidor [MCP](https://modelcontextprotocol.io/) (Model Context Protocol) que
 expõe dados públicos e oficiais do **IBGE** (Instituto Brasileiro de
 Geografia e Estatística) como *tools* prontas para uso por LLMs e agentes:
@@ -314,9 +316,16 @@ e aponte o cliente/proxy para o endpoint exposto pelo servidor.
 uv run ruff check .
 uv run ruff format .
 
-# Testes
+# Testes (não dependem de internet — respostas do IBGE são mockadas com respx)
 uv run pytest
+
+# Checagem de tipos (opcional)
+uv run mypy
 ```
+
+O CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) roda `uv sync`,
+`ruff check`, `ruff format --check` e `pytest` a cada push/PR; a checagem de
+tipos com `mypy` é opcional e não bloqueia o build.
 
 ### Estrutura do projeto
 
@@ -347,6 +356,8 @@ detalhada de cada camada e do fluxo de uma chamada.
 - [docs/data_sources.md](docs/data_sources.md) — APIs do IBGE utilizadas e
   formato do envelope de resposta.
 - [docs/security.md](docs/security.md) — considerações de segurança.
+- [docs/client_setup.md](docs/client_setup.md) — configuração em clientes
+  MCP (Claude Desktop, Cursor), perguntas de teste e limitações.
 - [examples/queries.md](examples/queries.md) — exemplos de chamadas às
   tools.
 

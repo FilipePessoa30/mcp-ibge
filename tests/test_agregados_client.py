@@ -233,3 +233,35 @@ async def test_query_agregado_valida_strings_vazias(variaveis, localidades):
     client = AgregadosClient()
     with pytest.raises(IBGEValidationError):
         await client.query_agregado("6579", variaveis=variaveis, localidades=localidades)
+
+
+@respx.mock
+async def test_get_agregado_metadata_populacao(agregado_metadados):
+    respx.get(f"{BASE_URL}/6579/metadados").mock(
+        return_value=httpx.Response(200, json=agregado_metadados)
+    )
+
+    client = AgregadosClient()
+    result = await client.get_agregado_metadata("6579")
+
+    assert result.data == agregado_metadados
+    assert result.data["pesquisa"] == "Estimativas de População"
+    assert result.data["periodicidade"]["frequencia"] == "anual"
+
+
+@respx.mock
+async def test_query_agregado_populacao_niteroi(agregado_consulta_resposta):
+    route = respx.get(f"{BASE_URL}/6579/periodos/2024/variaveis/9324").mock(
+        return_value=httpx.Response(200, json=agregado_consulta_resposta)
+    )
+
+    client = AgregadosClient()
+    result = await client.query_agregado(
+        "6579", variaveis="9324", localidades="N6[3303302]", periodos="2024"
+    )
+
+    assert result.data == agregado_consulta_resposta
+    serie = result.data[0]["resultados"][0]["series"][0]
+    assert serie["localidade"]["nome"] == "Niterói"
+    assert serie["serie"]["2024"] == "516981"
+    assert route.calls.last.request.url.params["localidades"] == "N6[3303302]"

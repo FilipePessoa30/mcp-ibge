@@ -6,6 +6,25 @@ natural — o modelo escolhe a tool e os argumentos. Os exemplos abaixo
 mostram o `name` da tool e o `arguments` equivalente, úteis para depuração
 ou para chamadas diretas via `mcp.call_tool`.
 
+## Perguntas de teste (linguagem natural)
+
+Após configurar o servidor em um cliente MCP (veja
+[docs/client_setup.md](../docs/client_setup.md)), use estas perguntas para
+verificar se a integração está funcionando. Cada uma deve levar o modelo a
+chamar uma ou mais das tools listadas abaixo.
+
+- "Liste os estados brasileiros." → `listar_estados`
+- "Qual é o código IBGE de Niterói, RJ?" → `obter_codigo_municipio`
+- "Liste os municípios do Rio de Janeiro." → `listar_municipios` (`uf="RJ"`)
+- "Busque municípios chamados São José." → `buscar_municipio` (deve incluir
+  `warnings` com vários candidatos)
+- "Consulte os metadados do agregado 6579 do SIDRA." →
+  `obter_metadados_agregado`
+- "Liste as variáveis do agregado 6579." → `listar_variaveis_agregado`
+- "Compare a população do Rio de Janeiro e de Niterói." →
+  `consultar_populacao_municipio` para cada município (e idealmente o prompt
+  `comparar_municipios`)
+
 ## Localidades
 
 ### Listar as grandes regiões do Brasil

@@ -221,3 +221,41 @@ async def test_get_json_usa_cache():
     await client.get_regioes()
 
     assert route.call_count == 1
+
+
+@respx.mock
+async def test_get_estado_rj(estado_rj):
+    respx.get(f"{BASE_URL}/estados/RJ").mock(return_value=httpx.Response(200, json=estado_rj))
+
+    client = LocalidadesClient()
+    result = await client.get_estado("RJ")
+
+    assert result.data == estado_rj
+    assert result.params == {"uf": "RJ"}
+
+
+@respx.mock
+async def test_get_municipios_rj_inclui_rio_e_niteroi(municipio_rio_de_janeiro, municipio_niteroi):
+    municipios_rj = [municipio_rio_de_janeiro, municipio_niteroi]
+    respx.get(f"{BASE_URL}/estados/RJ/municipios").mock(
+        return_value=httpx.Response(200, json=municipios_rj)
+    )
+
+    client = LocalidadesClient()
+    result = await client.get_municipios_by_uf("RJ")
+
+    assert [m["nome"] for m in result.data] == ["Rio de Janeiro", "Niterói"]
+    assert result.params == {"uf": "RJ"}
+
+
+@respx.mock
+async def test_search_municipios_sao_jose_ambiguo_no_brasil(municipios_sao_jose_ambiguo):
+    respx.get(f"{BASE_URL}/municipios").mock(
+        return_value=httpx.Response(200, json=municipios_sao_jose_ambiguo)
+    )
+
+    client = LocalidadesClient()
+    result = await client.search_municipios("São José")
+
+    assert {m["nome"] for m in result.data} == {"São José dos Campos", "São José dos Pinhais"}
+    assert result.raw == municipios_sao_jose_ambiguo
