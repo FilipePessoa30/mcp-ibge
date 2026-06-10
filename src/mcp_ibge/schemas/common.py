@@ -7,11 +7,13 @@ e params) para qualquer dado retornado por este servidor.
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel, Field
 
 from ..config import get_settings
+
+T = TypeVar("T")
 
 
 class SourceMetadata(BaseModel):
@@ -19,9 +21,10 @@ class SourceMetadata(BaseModel):
 
     source_name: str
     source_url: str
-    retrieved_at: str
     endpoint: str
     params: dict[str, Any] = Field(default_factory=dict)
+    retrieved_at: datetime
+    license_note: str | None = None
 
 
 class ToolResponse(BaseModel):
@@ -38,8 +41,21 @@ class ToolErrorResponse(BaseModel):
     error: str
 
 
-def _now_iso() -> str:
-    return datetime.now(UTC).isoformat()
+class TypedToolResult(BaseModel, Generic[T]):
+    """Envelope tipado e genérico para dados convertidos em schemas Pydantic.
+
+    Diferente de `ToolResponse`/`ToolErrorResponse` (o envelope MCP montado por
+    `build_response`/`build_error_response` e usado por `tools/__init__.py`),
+    este modelo serve para representar resultados já convertidos em schemas
+    tipados (`Region`, `State`, `Municipality`, ...) com avisos/erros não
+    fatais agregados — útil para conversões internas e testes.
+    """
+
+    ok: bool
+    data: T
+    metadata: SourceMetadata
+    warnings: list[str] = Field(default_factory=list)
+    errors: list[str] = Field(default_factory=list)
 
 
 def _build_metadata(
@@ -48,7 +64,7 @@ def _build_metadata(
     return SourceMetadata(
         source_name=get_settings().source_name,
         source_url=source_url,
-        retrieved_at=_now_iso(),
+        retrieved_at=datetime.now(UTC),
         endpoint=endpoint,
         params=params or {},
     )
