@@ -9,7 +9,7 @@ ou para chamadas diretas via `mcp.call_tool`.
 ## Perguntas de teste (linguagem natural)
 
 Após configurar o servidor em um cliente MCP (veja
-[docs/client_setup.md](../docs/client_setup.md)), use estas perguntas para
+[docs/client_setup.md](../../packages/mcp_ibge/docs/client_setup.md)), use estas perguntas para
 verificar se a integração está funcionando. Cada uma deve levar o modelo a
 chamar uma ou mais das tools listadas abaixo.
 
@@ -84,7 +84,7 @@ chamar uma ou mais das tools listadas abaixo.
 
 ## Agregados / SIDRA
 
-Veja também [docs/tools.md](../docs/tools.md#como-descobrir-agregado-variável-período-e-localidade)
+Veja também [docs/tools.md](../../packages/mcp_ibge/docs/tools.md#como-descobrir-agregado-variável-período-e-localidade)
 para o guia completo de como descobrir agregado, variável, período e
 localidade antes de chamar `consultar_agregado`.
 

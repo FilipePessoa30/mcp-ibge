@@ -1,76 +1,83 @@
-# Arquitetura
+# Architecture
 
-O projeto é organizado em camadas, cada uma com uma responsabilidade única,
-para manter baixo acoplamento e facilitar testes e evolução.
+`mcp-data-br` is a [uv workspace](https://docs.astral.sh/uv/concepts/projects/workspaces/)
+(monorepo): one repository, one shared virtual environment, multiple
+independently publishable Python packages — one per MCP server.
 
 ```
-src/mcp_ibge/
-├── server.py            # Monta o FastMCP, registra tools/resource/prompt e expõe `main()`
-├── config.py            # Settings (pydantic-settings), lidas de env / .env
-├── logging_config.py    # Configura logging para stderr (stdio-safe)
-├── clients/             # Camada HTTP "fina": só chama a API e devolve dados brutos
-│   ├── base.py           # AsyncIBGEClient: GET com timeout, cache e tratamento de erros
-│   ├── localidades.py    # LocalidadesClient (regiões, estados, municípios)
-│   └── agregados.py      # AgregadosClient (lista, metadados, dados do SIDRA)
-├── schemas/              # Modelos Pydantic: validação e envelope de resposta
-│   ├── common.py          # SourceMetadata, TypedToolResult, ToolResponse/ToolErrorResponse, build_response
-│   ├── localidades.py     # Region, State, Municipality, District + conversores *_from_raw
-│   └── agregados.py       # AgregadoSummary, AgregadoMetadata, AgregadoVariable, AgregadoPeriod, AgregadoQueryResult + conversores *_from_raw
-├── services/             # Regras de negócio: validação, filtros, aliases, indicadores
-│   ├── localidades_service.py  # retorna TypedToolResult[T] (data/metadata/warnings/errors)
-│   └── agregados_service.py    # idem; constantes AGREGADO_POPULACAO_ESTIMADA / VARIAVEL_POPULACAO_ESTIMADA
-├── tools/                # Camada MCP: expõe funções como `@mcp.tool()`
-│   ├── __init__.py        # `run_typed_tool()` (TypedToolResult) -> envelope padrão
-│   ├── localidades_tools.py  # register_localidades_tools(mcp)
-│   └── agregados_tools.py    # register_agregados_tools(mcp)
-└── utils/
-    ├── normalization.py   # normalize_text(): busca textual sem acento/caixa
-    ├── cache.py            # TTLCache + singleton get_cache()/clear_cache()
-    └── errors.py           # IBGEClientError e subclasses (NotFound, Validation, RateLimit, Server)
+mcp-data-br/
+├── pyproject.toml          # Workspace root (virtual project, not published)
+├── packages/
+│   └── mcp_ibge/            # mcp-ibge: IBGE Localidades + Agregados/SIDRA
+│       ├── pyproject.toml    # Publishable package (PyPI: mcp-ibge)
+│       ├── src/mcp_ibge/      # server.py, config.py, clients/, services/, schemas/, tools/, utils/
+│       ├── tests/
+│       ├── docs/               # Module-specific docs
+│       └── README.md
+├── docs/                    # Monorepo-level docs (this directory)
+├── examples/                # MCP client configs and prompts, shared across modules
+└── evals/                   # Evaluation datasets and reports, shared across modules
 ```
 
-## Fluxo de uma chamada
+## The workspace root
 
-1. Um cliente MCP chama uma tool (ex.: `consultar_populacao_municipio`).
-2. A tool (em `tools/`) delega para o `service` correspondente e envolve o
-   resultado com `run_typed_tool()`, que monta o envelope
-   `{"metadata": ..., "data" ou "error": ...}` (opcionalmente com `"warnings"`).
-3. O `service` aplica regras de negócio (filtros, validação com Pydantic,
-   resolução de aliases, conversão `*_from_raw`) e delega ao `client`.
-   `localidades_service` e `agregados_service` retornam
-   `TypedToolResult[T]` (`ok`, `data`, `metadata`, `warnings`, `errors`),
-   convertido pelo `run_typed_tool()`.
-4. O `client` (em `clients/`) monta a URL e os parâmetros, consulta o cache
-   (`utils/cache.py`) e, em caso de *miss*, faz a requisição HTTP via
-   `AsyncIBGEClient.get_json`.
-5. Erros de rede/HTTP são convertidos em subclasses de `IBGEClientError`
-   (`IBGENotFoundError`, `IBGEValidationError`, `IBGERateLimitError`,
-   `IBGEServerError`) por `AsyncIBGEClient`. Em ambos os services, são
-   capturados e convertidos em `TypedToolResult(ok=False, errors=[...])`,
-   que `run_typed_tool()` transforma no envelope de erro — sem derrubar o
-   servidor.
+The root `pyproject.toml` declares `mcp-data-br` as a **virtual project**
+(`[tool.uv] package = false`): it is never built or published itself. Its
+only jobs are:
 
-## Por que essa separação
+1. List `packages/*` as workspace members (`[tool.uv.workspace]`).
+2. Depend on those members (`[project.dependencies]`,
+   `[tool.uv.sources]`) so `uv sync` installs every module — and its console
+   scripts, like `mcp-ibge` — into one shared `.venv` at the repo root.
 
-- **clients/**: isolam detalhes da API do IBGE (URLs, formatos de query).
-  Podem ser testados com `respx` sem nenhuma lógica adicional.
-- **services/**: contêm a lógica que realmente importa para o usuário
-  (filtrar por região, buscar por nome ignorando acentos, calcular
-  população) — testáveis sem depender do protocolo MCP.
-- **tools/**: a única camada que conhece o FastMCP e o formato de envelope.
-  Mantém a "borda" do servidor fina e uniforme.
-- **schemas/**: garantem que os dados externos tenham o formato esperado
-  (`extra="allow"` permite campos adicionais da API sem quebrar o parsing) e
-  centralizam o formato do envelope de resposta.
+This means `uv run mcp-ibge` and `uv run python -m mcp_ibge.server` work
+from the repository root without any `--package` flags, while each module
+under `packages/` remains a normal, independently publishable Python package
+with its own `pyproject.toml`, version, and PyPI entry.
 
-## Trabalho futuro
+## Anatomy of a module package
 
-- **API de Projeções da População** (`servicodados.ibge.gov.br/api/v1/projecoes`):
-  base URL distinta da usada pelos agregados/SIDRA; pode ser adicionada como
-  um novo client (`clients/projecoes.py`) + service/tool dedicados, seguindo
-  o mesmo padrão.
-- **Transporte `streamable-http`**: `config.py` já expõe `transport`, e
-  `server.py` repassa o valor para `mcp.run(transport=...)` — falta apenas
-  documentar/testar o deploy via HTTP (ex.: atrás do `mcpo` para Open WebUI).
-- **Cache persistente**: `utils/cache.py` é um TTL cache em memória; pode ser
-  trocado por um backend externo (ex.: SQLite, Redis) sem alterar `clients/`.
+Every module under `packages/` is a self-contained MCP server. `mcp_ibge` is
+the reference implementation — see
+[packages/mcp_ibge/docs/architecture.md](../packages/mcp_ibge/docs/architecture.md)
+for its internal layering (`clients/` → `services/` → `tools/`, schemas,
+utils). New modules (e.g. a future `mcp-sidra` or `mcp-inep`) are expected to
+follow the same internal shape:
+
+- **`clients/`** — thin HTTP layer for the upstream public API, with a
+  validated host allowlist.
+- **`schemas/`** — Pydantic models for the data and for the response
+  envelope (see [data_sources.md](data_sources.md)).
+- **`services/`** — business logic: validation, filtering, lookups —
+  testable without the MCP protocol.
+- **`tools/`** — `@mcp.tool()` registrations; the only layer that knows
+  about FastMCP and the envelope format.
+- **`utils/`** — cross-cutting helpers (cache, normalization, error types).
+- **`tests/`** — `pytest` + `respx`, no real network access.
+- **`docs/`** — module-specific tools reference, architecture, security and
+  data source notes.
+- **`README.md`** — what the module does, installation, available tools.
+
+## Conventions shared across modules
+
+- **Response envelope**: every tool returns
+  `{"metadata": {...}, "data"/"error": ...}`, optionally with `warnings` —
+  see [data_sources.md](data_sources.md).
+- **Security baseline**: no shell execution, no local file access beyond
+  config loading, no arbitrary URLs, an allowlist of upstream API hosts,
+  input validation before any network call, timeouts and response size
+  limits — see [security.md](security.md).
+- **stdio-safe logging**: all logs go to `stderr`; `stdout` is reserved for
+  the MCP protocol.
+- **Configuration via env vars**: `pydantic-settings`, prefixed per module
+  (e.g. `MCP_IBGE_*`).
+
+## Adding a new module
+
+1. Create `packages/mcp_<name>/` following the layout above (it's
+   automatically picked up by `[tool.uv.workspace] members = ["packages/*"]`).
+2. Add it to the root `pyproject.toml` `dependencies` and
+   `[tool.uv.sources]` so `uv sync` installs it.
+3. Add module docs under `packages/mcp_<name>/docs/` and a module README.
+4. Add example client configs under `examples/` and update
+   [roadmap.md](roadmap.md).

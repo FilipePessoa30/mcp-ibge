@@ -5,6 +5,26 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- **Repository restructured as `mcp-data-br`**, a uv workspace (monorepo)
+  for a growing collection of MCP servers for Brazilian public data. The
+  `mcp-ibge` server itself is unchanged (no version bump) — only its
+  location and surrounding docs/examples moved:
+  - Source, tests, and the package's `pyproject.toml` moved to
+    `packages/mcp_ibge/`.
+  - Module-specific docs moved to `packages/mcp_ibge/docs/`; new
+    monorepo-level docs added under `docs/` (architecture, roadmap,
+    security, data sources — shared conventions for all current and future
+    modules).
+  - Example MCP client configs reorganized under `examples/` into
+    `claude_desktop/`, `cursor/`, `open_webui/` (new) and `agent_recipes/`.
+  - Added `evals/` as a placeholder for future evaluation datasets/reports.
+  - `uv run mcp-ibge` and `uv run python -m mcp_ibge.server` continue to
+    work unchanged from the repository root.
+
 ## [0.2.0] - 2026-06-10
 
 Initial **Agregados/SIDRA** support, promoted to stable. Focus: generic

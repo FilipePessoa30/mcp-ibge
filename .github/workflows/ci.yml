@@ -23,14 +23,14 @@ jobs:
         run: uv sync --all-extras
 
       - name: Lint (ruff check)
-        run: uv run ruff check .
+        run: uv run ruff check packages/mcp_ibge
 
       - name: Format check (ruff format)
-        run: uv run ruff format --check .
+        run: uv run ruff format --check packages/mcp_ibge
 
       - name: Type check (mypy, opcional)
-        run: uv run mypy
+        run: uv run --directory packages/mcp_ibge mypy
         continue-on-error: true
 
       - name: Tests (pytest)
-        run: uv run pytest -q
+        run: uv run --directory packages/mcp_ibge pytest -q

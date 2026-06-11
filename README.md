@@ -1,6 +1,8 @@
-# mcp-ibge
+# mcp-data-br
 
-**Model Context Protocol server for Brazilian IBGE public data.**
+**A collection of [Model Context Protocol](https://modelcontextprotocol.io/)
+(MCP) servers for Brazilian public data — typed, traceable, and safe to call
+from AI agents.**
 
 ![Python](https://img.shields.io/badge/python-3.11%2B-3776AB?logo=python&logoColor=white)
 ![MCP](https://img.shields.io/badge/MCP-Model%20Context%20Protocol-6A5ACD)
@@ -9,382 +11,117 @@
 ![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)
 ![pytest](https://img.shields.io/badge/tested%20with-pytest-0A9EDC?logo=pytest&logoColor=white)
 
-**mcp-ibge** exposes official, public data from the **IBGE** (Instituto
-Brasileiro de Geografia e Estatística — Brazilian Institute of Geography and
-Statistics) as typed, traceable [MCP](https://modelcontextprotocol.io/) tools:
-locations (regions, states, municipalities, districts), **SIDRA** statistical
-aggregates, and **population** indicators — ready to be called by Claude
-Desktop, Cursor and any other MCP-compatible agent.
+## What is mcp-data-br?
 
-> **v0.2.0 status**: the **Localidades** tools (regions, states,
-> municipalities, districts and code resolution) and the **Agregados/SIDRA**
-> tools (generic discovery and query of any SIDRA aggregate) are the stable,
-> fully tested core of this release. The **population indicator**
-> (`consultar_populacao_municipio`) is included as an **experimental
-> preview** — it works and is tested, but it depends on a fixed aggregate/
-> variable that the IBGE may discontinue or rename after a new Census (see
-> [Roadmap](#roadmap)).
+Brazilian public institutions (IBGE, INEP, Banco Central, dados.gov.br,
+state and city open data portals, ...) publish a huge amount of free,
+no-API-key data — but spread across many APIs, with inconsistent shapes,
+encodings and documentation that are hard for an LLM to use safely.
 
-## Quick demo
+**mcp-data-br** is a growing collection of small, focused MCP servers — one
+per data source — that turn those public APIs into **typed, traceable
+tools** an agent (Claude Desktop, Cursor, or any MCP-compatible client) can
+call directly. Every tool across every module follows the same conventions:
 
-Once configured in an MCP client, just ask in natural language:
+- **Typed, validated responses** — every tool is backed by Pydantic models.
+- **Traceable by design** — every response includes `metadata`
+  (`source_name`, `source_url`, `endpoint`, `params`, `retrieved_at`), so any
+  number can be checked against its official source.
+- **Safe by default** — no shell execution, no arbitrary file/URL access,
+  outbound requests restricted to an allowlist of official domains, input
+  validation before any network call. See [docs/security.md](docs/security.md).
+- **Local-first** — runs over `stdio`, no API keys, no external services
+  beyond the public data source itself.
 
-- *"What is the IBGE code for Niterói, RJ?"*
-- *"List all municipalities in Rio de Janeiro state."*
-- *"Search municipalities named São José."*
-- *"Get metadata for an IBGE aggregate."*
-- *"Query an IBGE aggregate with variables, periods and locations."*
+The project is organized as a single **uv workspace (monorepo)**: each data
+source gets its own installable package under [`packages/`](packages/), all
+sharing the same conventions and tooling.
 
-The agent picks the right tool (`obter_codigo_municipio`,
-`listar_municipios`, `buscar_municipio`, `obter_metadados_agregado`,
-`consultar_agregado`, ...), calls the public IBGE API, and returns a typed
-JSON response with full source metadata so the answer can be verified.
+## Available modules
 
-## Why this project?
+| Module | Status | Data | Docs |
+| --- | --- | --- | --- |
+| [`mcp-ibge`](packages/mcp_ibge/) | **Stable** | IBGE — geographic locations (regions, states, municipalities, districts) and Agregados/SIDRA statistical aggregates | [README](packages/mcp_ibge/README.md) · [docs](packages/mcp_ibge/docs/) |
 
-- **Brazilian public data is valuable but fragmented.** IBGE publishes rich,
-  free, no-API-key datasets — geographic codes, censuses, population
-  estimates and hundreds of SIDRA tables — but spread across multiple
-  endpoints, undocumented for LLMs, with inconsistent shapes and encodings.
-- **Agents need typed, traceable and safe tools.** An LLM calling a raw HTTP
-  API has no guarantee about the response shape, units, or where the data
-  came from — and an ambiguous lookup (e.g. "São José") can silently return
-  the wrong place.
-- **This server turns IBGE APIs into MCP tools.** Every tool returns a
-  validated, typed envelope with `data`/`error`, source metadata
-  (`source_name`, `source_url`, `endpoint`, `params`, `retrieved_at`), and
-  `warnings` for ambiguous results — so agents, and the humans reading their
-  answers, can trust and verify the numbers.
+## Planned modules
 
-## Features
+mcp-data-br is designed to grow. Planned/possible future modules include
+`mcp-sidra` (a dedicated SIDRA module, split out of `mcp-ibge`), `mcp-inep`
+(education data), `mcp-dados-gov-br` (generic dados.gov.br access),
+`mcp-bcb` (Banco Central indicators) and `mcp-rio` (Rio de Janeiro open
+data). See [docs/roadmap.md](docs/roadmap.md) for details — none of these
+are implemented yet, but the workspace is structured so they can be added as
+new packages without touching existing ones.
 
-- **Localidades API tools** (stable) — regions, states, municipalities and
-  districts, with codes and hierarchy resolved.
-- **Agregados/SIDRA tools** (stable) — generic discovery and query of any
-  SIDRA aggregate: list aggregates, inspect metadata, variables, periods and
-  locations, and query data.
-- **Population indicator** (experimental) —
-  `consultar_populacao_municipio`, built on top of Agregados/SIDRA.
-- **Municipality code resolution** — fuzzy, accent- and case-insensitive
-  search from a name to the 7-digit IBGE code, with disambiguation warnings.
-- **Typed JSON responses** — every tool is backed by Pydantic models.
-- **Source metadata on every response** — `source_name`, `source_url`,
-  `endpoint`, `params` and `retrieved_at` for full traceability.
-- **In-memory TTL cache** — avoids repeated calls to the IBGE API within a
-  session (configurable, can be disabled).
-- **Tests** — full `pytest` + `respx` suite, no network access required.
-- **Local-first** — runs over stdio, no API key, no external services beyond
-  the public IBGE API.
+## Quick start
 
-## Installation
-
-Requires **Python 3.11+**. [uv](https://docs.astral.sh/uv/) is recommended.
-
-### With uvx
+Requires **Python 3.11+** and [uv](https://docs.astral.sh/uv/).
 
 ```bash
-uvx mcp-ibge
-```
-
-> While the package is not yet published to an index, use the development
-> setup below and point your MCP client at the local checkout (see
-> [Usage with MCP clients](#usage-with-mcp-clients)).
-
-### Development mode
-
-```bash
-git clone https://github.com/FilipePessoa30/mcp-ibge.git
-cd mcp-ibge
-
-# Create the virtualenv and install the project + dev dependencies
-uv venv
-uv pip install -e ".[dev]"
-# or, equivalently:
+git clone https://github.com/FilipePessoa30/mcp-ibge.git mcp-data-br
+cd mcp-data-br
 uv sync --all-extras
-```
-
-Run it directly:
-
-```bash
 uv run mcp-ibge
-# or, equivalent:
-uv run python -m mcp_ibge.server
 ```
 
-This starts the server over **stdio** (the recommended transport for Claude
-Desktop, Cursor and other local MCP clients). Logs go to **stderr** — stdout
-is reserved exclusively for the MCP protocol.
+This starts the `mcp-ibge` server over `stdio`. For ready-to-use MCP client
+configs (Claude Desktop, Cursor, Open WebUI) and example prompts, see
+[examples/](examples/) and
+[packages/mcp_ibge/docs/client_setup.md](packages/mcp_ibge/docs/client_setup.md).
 
-## Usage with MCP clients
+For the full feature list, available tools, configuration options and
+roadmap of the IBGE module, see
+**[packages/mcp_ibge/README.md](packages/mcp_ibge/README.md)**.
 
-### Claude Desktop
+## Project layout
 
-Edit `claude_desktop_config.json`
-(`%APPDATA%\Claude\claude_desktop_config.json` on Windows,
-`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS)
-and add:
-
-```json
-{
-  "mcpServers": {
-    "ibge": {
-      "command": "uv",
-      "args": [
-        "--directory",
-        "/absolute/path/to/mcp-ibge",
-        "run",
-        "python",
-        "-m",
-        "mcp_ibge.server"
-      ]
-    }
-  }
-}
+```
+mcp-data-br/
+├── pyproject.toml          # uv workspace root (virtual project)
+├── packages/
+│   └── mcp_ibge/             # mcp-ibge: IBGE Localidades + Agregados/SIDRA
+│       ├── src/mcp_ibge/
+│       ├── tests/
+│       ├── docs/
+│       └── README.md
+├── docs/                    # Monorepo-level docs (architecture, roadmap, security, data sources)
+├── examples/                # MCP client configs (Claude Desktop, Cursor, Open WebUI) and prompts
+└── evals/                   # Evaluation datasets and reports (placeholder)
 ```
 
-Restart Claude Desktop. Tools like `listar_estados`,
-`obter_municipio_por_codigo` and `consultar_agregado` become available in
-conversations.
+See [docs/architecture.md](docs/architecture.md) for how the workspace and
+modules are organized, and [docs/architecture.md#adding-a-new-module](docs/architecture.md#adding-a-new-module)
+for what a new module needs.
 
-### Cursor
+## Documentation
 
-In `Settings -> MCP -> Add new MCP Server`, or by editing
-`~/.cursor/mcp.json`:
-
-```json
-{
-  "mcpServers": {
-    "ibge": {
-      "command": "uv",
-      "args": ["--directory", "/absolute/path/to/mcp-ibge", "run", "mcp-ibge"]
-    }
-  }
-}
-```
-
-### Local / development mode
-
-Ready-to-use configs for Linux/macOS/Windows (and a list of test prompts) are
-available in [examples/claude_desktop_config.json](examples/claude_desktop_config.json),
-[examples/cursor_config.json](examples/cursor_config.json) and
-[docs/client_setup.md](docs/client_setup.md).
-
-For HTTP-based clients (e.g. Open WebUI via [`mcpo`](https://github.com/open-webui/mcpo)),
-start the server with the `streamable-http` transport:
-
-```bash
-MCP_IBGE_TRANSPORT=streamable-http uv run mcp-ibge
-```
-
-### Configuration
-
-All settings have sensible defaults and can be overridden via environment
-variables (prefix `MCP_IBGE_`) or a `.env` file — see
-[.env.example](.env.example).
-
-| Variable | Default | Description |
-| --- | --- | --- |
-| `MCP_IBGE_API_BASE_URL` | `https://servicodados.ibge.gov.br/api` | Base URL shared by the IBGE APIs. Restricted to official IBGE domains (`https://servicodados.ibge.gov.br`) — see [docs/security.md](docs/security.md). |
-| `MCP_IBGE_SOURCE_NAME` | `IBGE - Instituto Brasileiro de Geografia e Estatística` | Name shown in `metadata.source_name`. |
-| `MCP_IBGE_USER_AGENT` | `mcp-ibge/0.2.0` | `User-Agent` header used for IBGE requests. |
-| `MCP_IBGE_TIMEOUT` | `30.0` | HTTP timeout (seconds) for each IBGE request. |
-| `MCP_IBGE_MAX_RESPONSE_SIZE_BYTES` | `5000000` | Maximum response body size (bytes) accepted from the IBGE API. |
-| `MCP_IBGE_CACHE_ENABLED` | `true` | Enable/disable the in-memory cache. |
-| `MCP_IBGE_CACHE_TTL_SECONDS` | `3600.0` | Cache entry time-to-live (seconds). |
-| `MCP_IBGE_CACHE_MAX_SIZE` | `256` | Maximum number of cached responses. |
-| `MCP_IBGE_LOG_LEVEL` | `INFO` | Log level (`DEBUG`, `INFO`, ...); always written to stderr. |
-| `MCP_IBGE_TRANSPORT` | `stdio` | MCP transport (`stdio` or `streamable-http`). |
-| `MCP_IBGE_PORT` | `8000` | Port used by the `streamable-http` transport. |
-
-## Available tools
-
-Every tool returns `{"metadata": {...}, "data": ...}` on success or
-`{"metadata": {...}, "error": "..."}` on failure. Localidades tools may also
-include a `warnings` list when a search is ambiguous. See
-[docs/tools.md](docs/tools.md) for full argument reference and
-[examples/queries.md](examples/queries.md) for more examples.
-
-### Localidades
-
-| Tool | Description | Example |
-| --- | --- | --- |
-| `listar_regioes` | List Brazil's 5 geographic regions. | `listar_regioes()` |
-| `listar_estados` | List all 26 states + the Federal District, sorted by name. | `listar_estados()` |
-| `obter_estado` | Get details of a state by abbreviation or IBGE code. | `obter_estado(uf="RJ")` |
-| `listar_municipios` | List the municipalities of a state, with state and region resolved. | `listar_municipios(uf="RJ")` |
-| `buscar_municipio` | Fuzzy, accent/case-insensitive municipality search; returns `warnings` if ambiguous. | `buscar_municipio(nome="São José")` |
-| `obter_codigo_municipio` | Get the 7-digit IBGE code for a municipality by name and state. | `obter_codigo_municipio(nome="Niterói", uf="RJ")` |
-| `obter_municipio_por_codigo` | Get municipality details by IBGE code, with state and region resolved. | `obter_municipio_por_codigo(codigo_ibge=3303302)` |
-| `listar_distritos` | List the districts of a municipality by IBGE code. | `listar_distritos(codigo_municipio=3304557)` |
-
-### Agregados / SIDRA
-
-> Generic discovery and query tools for **any** SIDRA aggregate (table). See
-> [docs/tools.md](docs/tools.md#como-descobrir-agregado-variável-período-e-localidade)
-> for a step-by-step guide on how to discover an aggregate, its variables,
-> periods and locations before calling `consultar_agregado`.
-
-| Tool | Description | Example |
-| --- | --- | --- |
-| `listar_agregados` | List SIDRA aggregates (tables), filterable by survey, subject or text. | `listar_agregados(assunto="População")` |
-| `obter_metadados_agregado` | Get metadata for an aggregate: survey, subject, periodicity, variables, classifications and territorial levels (full JSON in `raw`). | `obter_metadados_agregado(agregado_id="6579")` |
-| `listar_variaveis_agregado` | List the variables available in an aggregate. | `listar_variaveis_agregado(agregado_id="6579")` |
-| `listar_periodos_agregado` | List the periods available for an aggregate. | `listar_periodos_agregado(agregado_id="6579")` |
-| `listar_localidades_agregado` | List the locations available for an aggregate at one or more territorial levels. | `listar_localidades_agregado(agregado_id="6579", niveis="N6")` |
-| `consultar_agregado` | Query an aggregate's values for given variables, periods, locations and (optionally) classifications. | `consultar_agregado(agregado_id="7060", variaveis="63", localidades="N1[all]", periodos="-1", classificacao="315[7169]")` |
-
-### Indicators (experimental)
-
-| Tool | Description | Example |
-| --- | --- | --- |
-| `consultar_populacao_municipio` | Estimated resident population of a municipality, by name and state. | `consultar_populacao_municipio(nome="Niterói", uf="RJ")` |
-
-**Resources & prompts**: `ibge://status` (server status: version, available
-tools, query time) and `comparar_municipios` (a prompt that guides comparing
-an indicator across municipalities, always citing source, period, territorial
-unit and limitations).
-
-## Data sources
-
-All data is fetched live, with no API key, from the **IBGE Serviços de
-Dados** API:
-
-- [IBGE Localidades API](https://servicodados.ibge.gov.br/api/docs/localidades)
-  — regions, states, municipalities and districts.
-- [IBGE Agregados (SIDRA) API](https://servicodados.ibge.gov.br/api/docs/agregados)
-  — statistical aggregates, including censuses and population estimates.
-
-See [docs/data_sources.md](docs/data_sources.md) for the response envelope
-format, [docs/architecture.md](docs/architecture.md) for the layered
-architecture, [docs/security.md](docs/security.md) for security
-considerations, and [docs/examples.md](docs/examples.md) for worked
-end-to-end examples (with real JSON responses) of agents using these tools.
-
-## Roadmap
-
-- [x] **v0.1.0** — Localidades tools (regions, states, municipalities,
-  districts, fuzzy search and code resolution): **stable**, with full test
-  coverage, README, configuration examples and CI. Agregados/SIDRA tools, the
-  population indicator and the `comparar_municipios` prompt were included as
-  **experimental previews**.
-- [x] **v0.2.0** (current) — Initial Agregados/SIDRA support promoted to
-  **stable**: `listar_agregados`, `obter_metadados_agregado`,
-  `listar_variaveis_agregado`, `listar_periodos_agregado`,
-  `listar_localidades_agregado` and `consultar_agregado` cover generic
-  discovery and query of any SIDRA aggregate, with a documented discovery
-  workflow and real worked examples (see
-  [docs/tools.md](docs/tools.md#como-descobrir-agregado-variável-período-e-localidade)).
-  The population indicator (`consultar_populacao_municipio`) and the
-  `comparar_municipios` prompt remain **experimental**.
-- [ ] **v0.2.1** — Stabilize the population indicator
-  (`consultar_populacao_municipio`) and the `comparar_municipios` prompt
-  based on real-world usage and feedback.
-- [ ] **v0.3.0** — Census helpers: dedicated tools for Census-specific
-  aggregates and classifications.
-- [ ] **v0.4.0** — Geographic meshes: municipality/state boundary geometries
-  (malhas territoriais).
-- [ ] **v1.0.0** — Stable MCP server: published package, stable tool
-  contracts for all domains, and `streamable-http` hardened for remote
-  deployments.
-
-## Limitations
-
-- **Does not replace official validation.** Always check `metadata` (source,
-  endpoint, retrieval time, parameters) and any `warnings` against the
-  official IBGE sources before using the data in reports or decisions.
-- **Some aggregates require SIDRA knowledge.** `consultar_agregado` mirrors
-  the SIDRA query syntax (variables, periods, locations, classifications);
-  use `listar_agregados`, `obter_metadados_agregado`,
-  `listar_variaveis_agregado`, `listar_periodos_agregado` and
-  `listar_localidades_agregado` to discover valid IDs first.
-- **Changes to the IBGE API may require adjustments.** This server depends on
-  `servicodados.ibge.gov.br`; outages, schema changes, or aggregates
-  discontinued/renamed after a new Census can affect responses and may
-  require updates to this project.
-
-## 🇧🇷 Sobre o projeto (resumo em português)
-
-O **mcp-ibge** é um servidor [MCP](https://modelcontextprotocol.io/) que
-expõe dados públicos e oficiais do **IBGE** — localidades, agregados do
-**SIDRA** e indicadores de **população** — como *tools* tipadas e
-rastreáveis para agentes de IA (Claude Desktop, Cursor, etc.). Não requer
-chave de API, roda 100% local via stdio, e toda resposta inclui metadados de
-fonte (`source_name`, `source_url`, `endpoint`, `params`, `retrieved_at`) para
-conferência na fonte oficial. Veja [docs/client_setup.md](docs/client_setup.md)
-para um guia de configuração com perguntas de teste em português.
-
-**Status na v0.2.0**: as *tools* de **Localidades** e o suporte inicial a
-**Agregados/SIDRA** (descoberta e consulta genérica de qualquer agregado:
-`listar_agregados`, `obter_metadados_agregado`, `listar_variaveis_agregado`,
-`listar_periodos_agregado`, `listar_localidades_agregado` e
-`consultar_agregado`) são o núcleo **estável** e totalmente testado desta
-versão. O indicador de população (`consultar_populacao_municipio`) continua
-**experimental** — funciona e tem testes, mas depende de um agregado e
-variável fixos que o IBGE pode descontinuar/renomear após um novo Censo.
+- [docs/index.md](docs/index.md) — documentation index
+- [docs/architecture.md](docs/architecture.md) — workspace structure and
+  module conventions
+- [docs/data_sources.md](docs/data_sources.md) — shared response envelope
+  and data source registry
+- [docs/security.md](docs/security.md) — security baseline
+- [docs/roadmap.md](docs/roadmap.md) — current and planned modules
 
 ## Contributing
 
-Contributions are welcome — bug reports, new tools, documentation and tests.
+Contributions are welcome — bug reports, new tools, new modules,
+documentation and tests. See [CONTRIBUTING.md](CONTRIBUTING.md) for the
+development setup (uv workspace, lint/format/test commands) and guidelines.
 
-```bash
-git clone https://github.com/FilipePessoa30/mcp-ibge.git
-cd mcp-ibge
-uv sync --all-extras
+## 🇧🇷 Sobre o projeto (resumo em português)
 
-# Lint & format
-uv run ruff check .
-uv run ruff format .
-
-# Tests (no network required — IBGE responses are mocked with respx)
-uv run pytest
-
-# Optional type checking
-uv run mypy
-```
-
-CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs `uv sync`,
-`ruff check`, `ruff format --check` and `pytest` on every push/PR; `mypy`
-runs as an optional, non-blocking step.
-
-### Project layout
-
-```
-mcp-ibge/
-├── src/mcp_ibge/
-│   ├── server.py        # FastMCP wiring, tool registration, `main()` entrypoint
-│   ├── config.py         # Settings (pydantic-settings): URLs, timeouts, cache
-│   ├── logging_config.py # stderr logging (stdio-safe)
-│   ├── clients/           # Thin HTTP layer (base, localidades, agregados)
-│   ├── schemas/           # Pydantic models and the response envelope
-│   ├── services/          # Business logic (filters, aliases, indicators)
-│   ├── tools/              # FastMCP tools (`@mcp.tool()`)
-│   └── utils/              # cache, text normalization, exceptions
-├── tests/                  # Unit tests (pytest + respx)
-├── examples/               # Example MCP client configs and queries
-└── docs/                   # Architecture, tools reference, data sources, security
-```
-
-See [docs/architecture.md](docs/architecture.md) for a detailed description
-of each layer and the request flow.
+**mcp-data-br** é uma coleção de servidores [MCP](https://modelcontextprotocol.io/)
+para dados públicos brasileiros, organizados como um único workspace
+(monorepo) onde cada fonte de dados ganha seu próprio pacote em
+[`packages/`](packages/). A primeira entrega é o **mcp-ibge**, com dados de
+localidades e agregados do SIDRA do IBGE — veja
+[packages/mcp_ibge/README.md](packages/mcp_ibge/README.md). O projeto foi
+desenhado para crescer com novos módulos (ex.: SIDRA dedicado, INEP, Banco
+Central, dados.gov.br, Rio de Janeiro) seguindo as mesmas convenções de
+respostas tipadas, rastreáveis e seguras — veja
+[docs/roadmap.md](docs/roadmap.md).
 
 ## License
 
 [MIT](LICENSE)
-
-## Citation
-
-If you use `mcp-ibge` in research, tooling or a derivative project, please
-cite it and the underlying IBGE data:
-
-```bibtex
-@software{mcp_ibge,
-  title   = {mcp-ibge: Model Context Protocol server for Brazilian IBGE public data},
-  author  = {{mcp-ibge contributors}},
-  year    = {2026},
-  url     = {https://github.com/FilipePessoa30/mcp-ibge},
-  license = {MIT}
-}
-```
-
-Underlying data: **IBGE — Instituto Brasileiro de Geografia e Estatística**,
-via [servicodados.ibge.gov.br](https://servicodados.ibge.gov.br/api/docs).

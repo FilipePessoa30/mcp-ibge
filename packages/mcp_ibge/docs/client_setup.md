@@ -5,8 +5,8 @@ Desktop, Cursor) e traz perguntas de teste para validar a integração.
 
 Arquivos de exemplo prontos:
 
-- [examples/claude_desktop_config.json](../examples/claude_desktop_config.json)
-- [examples/cursor_config.json](../examples/cursor_config.json)
+- [examples/claude_desktop/mcp_ibge.json](../../../examples/claude_desktop/mcp_ibge.json)
+- [examples/cursor/mcp_ibge.json](../../../examples/cursor/mcp_ibge.json)
 
 Todas as configurações usam o transporte `stdio` (padrão do servidor) — o
 cliente inicia o processo do servidor e se comunica via stdin/stdout, sem
@@ -71,11 +71,12 @@ o diretório do projeto e execute o módulo do servidor diretamente:
 }
 ```
 
-Esse comando precisa ser executado **a partir da raiz do projeto** (onde está
-o `pyproject.toml`). Como a maioria dos clientes MCP não permite configurar o
-diretório de trabalho, adicione `--directory` com o caminho absoluto do
-projeto antes de `run` — é o que faz
-[examples/claude_desktop_config.json](../examples/claude_desktop_config.json)
+Esse comando precisa ser executado **a partir da raiz do repositório**
+`mcp-data-br` (onde está o `pyproject.toml` do workspace — `mcp-ibge` é
+instalado como membro do workspace). Como a maioria dos clientes MCP não
+permite configurar o diretório de trabalho, adicione `--directory` com o
+caminho absoluto do repositório antes de `run` — é o que faz
+[examples/claude_desktop/mcp_ibge.json](../../../examples/claude_desktop/mcp_ibge.json)
 (entrada `ibge-dev`):
 
 ```json
@@ -85,7 +86,7 @@ projeto antes de `run` — é o que faz
       "command": "uv",
       "args": [
         "--directory",
-        "/caminho/absoluto/para/mcp-ibge",
+        "/caminho/absoluto/para/mcp-data-br",
         "run",
         "python",
         "-m",
@@ -97,14 +98,14 @@ projeto antes de `run` — é o que faz
 ```
 
 No Windows, use o caminho absoluto com barras duplas ou simples, ex.:
-`"C:\\caminho\\para\\mcp-ibge"` ou `"C:/caminho/para/mcp-ibge"`.
+`"C:\\caminho\\para\\mcp-data-br"` ou `"C:/caminho/para/mcp-data-br"`.
 
 ## Cursor
 
 Em `Settings -> MCP -> Add new MCP Server`, ou editando `~/.cursor/mcp.json`,
 use o mesmo formato `mcpServers` — veja
-[examples/cursor_config.json](../examples/cursor_config.json) para as
-variantes Linux/macOS, Windows (`cmd /c`) e desenvolvimento local
+[examples/cursor/mcp_ibge.json](../../../examples/cursor/mcp_ibge.json) para
+as variantes Linux/macOS, Windows (`cmd /c`) e desenvolvimento local
 (`uv --directory ... run mcp-ibge`).
 
 ## Reiniciar o cliente
@@ -116,8 +117,8 @@ disponíveis na conversa.
 ## Perguntas de teste
 
 Use estas perguntas em linguagem natural para validar a configuração — veja
-[examples/queries.md](../examples/queries.md) para os argumentos equivalentes
-de cada tool e mais exemplos:
+[examples/agent_recipes/mcp_ibge_queries.md](../../../examples/agent_recipes/mcp_ibge_queries.md)
+para os argumentos equivalentes de cada tool e mais exemplos:
 
 1. "Liste os estados brasileiros."
 2. "Qual é o código IBGE de Niterói, RJ?"

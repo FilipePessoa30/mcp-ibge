@@ -1,36 +1,26 @@
 [project]
-name = "mcp-ibge"
-version = "0.2.0"
-description = "Servidor MCP (Model Context Protocol) para consultar dados públicos e oficiais do IBGE: localidades, agregados/SIDRA e indicadores de população."
+name = "mcp-data-br"
+version = "0.1.0"
+description = "mcp-data-br: a collection of Model Context Protocol (MCP) servers for Brazilian public data (IBGE, SIDRA and more)."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
-authors = [{ name = "mcp-ibge contributors" }]
+authors = [{ name = "mcp-data-br contributors" }]
 keywords = [
     "mcp",
     "model-context-protocol",
     "ibge",
-    "sidra",
-    "dados-abertos",
+    "brazil",
     "open-data",
-    "brasil",
+    "public-data",
+    "sidra",
 ]
-classifiers = [
-    "Development Status :: 3 - Alpha",
-    "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Topic :: Software Development :: Libraries :: Python Modules",
-    "Topic :: Internet :: WWW/HTTP :: Indexing/Search",
-]
-dependencies = [
-    "mcp[cli]>=1.6.0",
-    "httpx>=0.27",
-    "pydantic>=2.6",
-    "pydantic-settings>=2.2",
-]
+
+# This root project is a virtual workspace root (see [tool.uv]): it is not
+# built or published itself. Its `dependencies` make `uv sync` install every
+# workspace member (and their entry points, e.g. `mcp-ibge`) into a single
+# shared environment, so `uv run mcp-ibge` works from the repository root.
+dependencies = ["mcp-ibge"]
 
 [project.optional-dependencies]
 dev = [
@@ -45,34 +35,11 @@ dev = [
 Homepage = "https://github.com/FilipePessoa30/mcp-ibge"
 Issues = "https://github.com/FilipePessoa30/mcp-ibge/issues"
 
-[project.scripts]
-mcp-ibge = "mcp_ibge.server:main"
+[tool.uv]
+package = false
 
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+[tool.uv.workspace]
+members = ["packages/*"]
 
-[tool.hatch.build.targets.wheel]
-packages = ["src/mcp_ibge"]
-
-[tool.ruff]
-line-length = 100
-target-version = "py311"
-src = ["src", "tests"]
-
-[tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B", "SIM", "RUF", "PT"]
-ignore = ["B008"]
-
-[tool.ruff.lint.isort]
-known-first-party = ["mcp_ibge"]
-
-[tool.pytest.ini_options]
-asyncio_mode = "auto"
-testpaths = ["tests"]
-
-[tool.mypy]
-python_version = "3.11"
-files = ["src"]
-ignore_missing_imports = true
-check_untyped_defs = true
+[tool.uv.sources]
+mcp-ibge = { workspace = true }

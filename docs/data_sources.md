@@ -1,25 +1,10 @@
-# Fontes de dados e formato de resposta
+# Data sources & response format
 
-## APIs do IBGE utilizadas
+## Shared response envelope
 
-Todas as fontes são públicas, gratuitas e **não exigem chave de API**. Os
-clientes compartilham uma URL base comum (`MCP_IBGE_API_BASE_URL`, padrão
-`https://servicodados.ibge.gov.br/api`) e cada um acrescenta seu próprio
-prefixo de versão/recurso:
-
-| API | Caminho | URL completa (padrão) | Usada por |
-| --- | --- | --- | --- |
-| Localidades | `/v1/localidades` | `https://servicodados.ibge.gov.br/api/v1/localidades` | `clients/localidades.py` |
-| Agregados (SIDRA) | `/v3/agregados` | `https://servicodados.ibge.gov.br/api/v3/agregados` | `clients/agregados.py` |
-
-Documentação oficial: <https://servicodados.ibge.gov.br/api/docs>.
-
-## Formato do envelope de resposta
-
-Toda tool retorna um objeto JSON com dois campos: `metadata` e, dependendo
-do resultado, `data` (sucesso) ou `error` (falha).
-
-### Sucesso
+Every tool in every `mcp-data-br` module returns a JSON object with a
+`metadata` field plus either `data` (success) or `error` (failure), and an
+optional `warnings` list:
 
 ```json
 {
@@ -36,48 +21,36 @@ do resultado, `data` (sucesso) ou `error` (falha).
 }
 ```
 
-### Erro
-
 ```json
 {
-  "metadata": {
-    "source_name": "IBGE - Instituto Brasileiro de Geografia e Estatística",
-    "source_url": "https://servicodados.ibge.gov.br/api/v1/localidades/municipios/0000000",
-    "retrieved_at": "2026-06-10T12:00:00Z",
-    "endpoint": "https://servicodados.ibge.gov.br/api/v1/localidades/municipios/0000000",
-    "params": { "municipio_id": 0 }
-  },
-  "error": "Erro HTTP 404 ao consultar https://servicodados.ibge.gov.br/api/v1/localidades/municipios/0000000"
+  "metadata": { "...": "..." },
+  "error": "Erro HTTP 404 ao consultar ..."
 }
 ```
 
-### Campos de `metadata`
-
-| Campo | Descrição |
+| Field (`metadata`) | Description |
 | --- | --- |
-| `source_name` | Nome da fonte oficial dos dados (configurável via `MCP_IBGE_SOURCE_NAME`). |
-| `source_url` | URL efetivamente consultada para obter os dados/erro. |
-| `retrieved_at` | Timestamp ISO 8601 (UTC, sufixo `Z`) do momento da consulta. |
-| `endpoint` | URL do endpoint da API do IBGE utilizado. |
-| `params` | Parâmetros usados na consulta (após resolução de aliases, filtros, etc.). |
+| `source_name` | Human-readable name of the official data source. |
+| `source_url` / `endpoint` | The upstream URL actually queried. |
+| `retrieved_at` | ISO 8601 (UTC) timestamp of the query. |
+| `params` | Parameters used for the query, after alias/filter resolution. |
 
-Esse formato garante que qualquer dado retornado por uma tool possa ser
-**rastreado até a fonte oficial**, com data/hora da consulta e os parâmetros
-exatos utilizados — importante para auditoria e para o usuário verificar a
-informação na fonte original.
+This format lets agents (and humans) **trace any value back to its official
+source**, with the exact time and parameters used — important for auditing
+and for verifying data before relying on it in reports or decisions.
 
-### Campo opcional `warnings`
+`warnings` (optional, list of strings) signals ambiguities — e.g. a
+fuzzy-search tool matching multiple candidates.
 
-As tools de Localidades que envolvem busca aproximada (ex.:
-`buscar_municipio`, `obter_codigo_municipio`) podem incluir um campo adicional
-`warnings` (lista de strings) na resposta de sucesso, sinalizando ambiguidades
-— por exemplo, quando mais de um município corresponde ao nome buscado. Nesse
-caso, `data` traz os candidatos encontrados e o aviso sugere refinar a busca
-(ex.: informando `uf`).
+## Data sources by module
 
-## Cache
+| Module | Source | Base URL | API docs |
+| --- | --- | --- | --- |
+| [`mcp-ibge`](../packages/mcp_ibge/) | IBGE — Instituto Brasileiro de Geografia e Estatística (Localidades, Agregados/SIDRA) | `https://servicodados.ibge.gov.br/api` | <https://servicodados.ibge.gov.br/api/docs> |
 
-As respostas das APIs do IBGE são opcionalmente cacheadas em memória
-(`utils/cache.py`, TTL configurável via `MCP_IBGE_CACHE_TTL_SECONDS`). O
-cache é local ao processo, não persiste entre execuções e serve apenas para
-evitar chamadas repetidas durante a mesma sessão.
+Future modules (see [roadmap.md](roadmap.md)) will add their own rows here
+as they're implemented, each with its own base URL allowlist as described in
+[security.md](security.md).
+
+For IBGE-specific endpoint details, see
+[packages/mcp_ibge/docs/data_sources.md](../packages/mcp_ibge/docs/data_sources.md).

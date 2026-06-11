@@ -663,5 +663,5 @@ indicators pipeline."
   — discovery workflow for SIDRA aggregates.
 - [docs/data_sources.md](data_sources.md) — formato do envelope de resposta /
   response envelope format.
-- [examples/queries.md](../examples/queries.md) — exemplos de chamadas MCP
-  brutas (JSON) / raw MCP call examples (JSON).
+- [examples/agent_recipes/mcp_ibge_queries.md](../../../examples/agent_recipes/mcp_ibge_queries.md)
+  — exemplos de chamadas MCP brutas (JSON) / raw MCP call examples (JSON).

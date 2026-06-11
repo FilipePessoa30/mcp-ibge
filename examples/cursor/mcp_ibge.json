@@ -12,7 +12,7 @@
       "command": "uv",
       "args": [
         "--directory",
-        "/caminho/absoluto/para/mcp-ibge",
+        "/caminho/absoluto/para/mcp-data-br",
         "run",
         "mcp-ibge"
       ]
