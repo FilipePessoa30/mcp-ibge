@@ -12,7 +12,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..utils.normalization import normalize_text
-from ..utils.validation import (
+from ..utils.validators import (
     UF_CODIGO_POR_SIGLA,
     UF_SIGLA_POR_CODIGO,
     validate_municipality_code,

@@ -24,6 +24,7 @@ from ..schemas.localidades import (
 )
 from ..utils.errors import IBGEClientError
 from ..utils.normalization import normalize_text
+from ..utils.validators import validate_limit
 
 # Níveis territoriais (SIDRA/IBGE) de cada recurso de Localidades.
 _NIVEL_REGIAO = "N2"
@@ -188,6 +189,7 @@ class LocalidadesService:
             params["uf"] = uf
 
         try:
+            limite = validate_limit(limite)
             result = (
                 await self._client.get_municipios_by_uf(uf)
                 if uf

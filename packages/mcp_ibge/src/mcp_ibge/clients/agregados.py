@@ -27,7 +27,12 @@ from __future__ import annotations
 from typing import Any
 
 from ..utils.errors import IBGENotFoundError, IBGEValidationError
-from ..utils.validation import validate_agregado_id, validate_niveis, validate_periodos
+from ..utils.validators import (
+    validate_agregado_id,
+    validate_niveis,
+    validate_periodos,
+    validate_variaveis,
+)
 from .base import AsyncIBGEClient, IBGEResult
 
 AGREGADOS_PATH = "/v3/agregados"
@@ -153,7 +158,7 @@ class AgregadosClient(AsyncIBGEClient):
     ) -> IBGEResult:
         """`GET /agregados/{agregado_id}/periodos/{periodos}/variaveis/{variaveis}`."""
         agregado_id = validate_agregado_id(agregado_id, url=self.base_url)
-        variaveis = _validar_obrigatorio(variaveis, "variaveis", url=self.base_url)
+        variaveis = validate_variaveis(variaveis, url=self.base_url)
         localidades = _validar_obrigatorio(localidades, "localidades", url=self.base_url)
         periodos = validate_periodos(periodos, url=self.base_url)
 

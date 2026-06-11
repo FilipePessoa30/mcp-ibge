@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Stronger input validation** (`mcp_ibge.utils.validators`, renamed from
+  `utils.validation`): `validate_variaveis` (SIDRA variable IDs, e.g.
+  `"93"`, `"93|1000093"`, or `"all"`) and `validate_limit` (pagination limit,
+  1-100) are new; `validate_periodos` now also accepts `"|"`-separated
+  periods (e.g. `"2020|2021|2022"`) in addition to `","`, and
+  `validate_niveis` now accepts territorial-level compositions like
+  `"N3[33]"` or `"N3[33,35]"`. All validators raise `IBGEValidationError`
+  with clear messages before any network call. `AgregadosClient.query_agregado`
+  now validates `variaveis`, and `LocalidadesService.buscar_municipio` now
+  validates `limite` (1-100), on top of the existing tool-level
+  `Field(ge=1, le=50)`. See [docs/security.md](packages/mcp_ibge/docs/security.md#5-validação-de-entrada-uf-município-agregado-variável-período-nível-limite).
+
 ### Changed
 
 - **BREAKING: standardized response envelope for all `mcp-ibge` tools.**
