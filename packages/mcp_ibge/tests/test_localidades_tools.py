@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import json
-
 import httpx
 import pytest
 import respx
@@ -11,6 +9,8 @@ import respx
 from mcp_ibge.clients.localidades import LOCALIDADES_PATH
 from mcp_ibge.config import get_settings
 from mcp_ibge.server import mcp
+
+from .conftest import assert_envelope_contract
 
 BASE_URL = f"{get_settings().api_base_url}{LOCALIDADES_PATH}"
 
@@ -70,14 +70,6 @@ async def test_todas_as_tools_de_localidades_estao_registradas():
     assert LOCALIDADES_TOOLS.issubset(nomes)
 
 
-def _assert_contrato_json(structured: dict) -> None:
-    """Garante que a resposta é um dict JSON-serializável com `metadata` e `data`/`error`."""
-    assert isinstance(structured, dict)
-    assert "metadata" in structured
-    assert ("data" in structured) ^ ("error" in structured)
-    json.dumps(structured)
-
-
 @respx.mock
 @pytest.mark.parametrize(
     ("nome_tool", "argumentos", "endpoint_mock", "resposta_mock"),
@@ -119,7 +111,7 @@ async def test_tool_retorna_contrato_json_em_caso_de_sucesso(
 
     _, structured = await mcp.call_tool(nome_tool, argumentos)
 
-    _assert_contrato_json(structured)
+    assert_envelope_contract(structured)
     assert "data" in structured
 
 
@@ -135,7 +127,7 @@ async def test_buscar_municipio_ambiguo_inclui_warnings_no_contrato():
 
     _, structured = await mcp.call_tool("buscar_municipio", {"nome": "São José"})
 
-    _assert_contrato_json(structured)
+    assert_envelope_contract(structured)
     assert "data" in structured
     assert "warnings" in structured
     assert structured["warnings"]
@@ -149,5 +141,7 @@ async def test_tool_retorna_contrato_json_em_caso_de_erro():
 
     _, structured = await mcp.call_tool("obter_municipio_por_codigo", {"codigo_ibge": 9999999})
 
-    _assert_contrato_json(structured)
-    assert "error" in structured
+    assert_envelope_contract(structured)
+    assert structured["ok"] is False
+    assert structured["data"] is None
+    assert structured["errors"]

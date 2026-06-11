@@ -8,12 +8,10 @@ rastreáveis (`TypedToolResult`) às tools MCP.
 from __future__ import annotations
 
 import difflib
-from datetime import UTC, datetime
 from typing import Any
 
 from ..clients.localidades import LocalidadesClient
-from ..config import get_settings
-from ..schemas.common import SourceMetadata, TypedToolResult
+from ..schemas.common import SourceMetadata, TypedToolResult, build_metadata
 from ..schemas.localidades import (
     District,
     Municipality,
@@ -27,14 +25,26 @@ from ..schemas.localidades import (
 from ..utils.errors import IBGEClientError
 from ..utils.normalization import normalize_text
 
+# Níveis territoriais (SIDRA/IBGE) de cada recurso de Localidades.
+_NIVEL_REGIAO = "N2"
+_NIVEL_ESTADO = "N3"
+_NIVEL_MUNICIPIO = "N6"
+_NIVEL_DISTRITO = "N7"
 
-def _metadata(*, endpoint: str, params: dict[str, Any]) -> SourceMetadata:
-    return SourceMetadata(
-        source_name=get_settings().source_name,
+
+def _metadata(
+    *,
+    endpoint: str,
+    params: dict[str, Any],
+    territorial_level: str | None = None,
+    cache_hit: bool = False,
+) -> SourceMetadata:
+    return build_metadata(
         source_url=endpoint,
         endpoint=endpoint,
         params=params,
-        retrieved_at=datetime.now(UTC),
+        territorial_level=territorial_level,
+        cache_hit=cache_hit,
     )
 
 
@@ -86,7 +96,12 @@ class LocalidadesService:
         return TypedToolResult(
             ok=True,
             data=regioes,
-            metadata=_metadata(endpoint=result.endpoint, params=result.params),
+            metadata=_metadata(
+                endpoint=result.endpoint,
+                params=result.params,
+                territorial_level=_NIVEL_REGIAO,
+                cache_hit=result.cache_hit,
+            ),
         )
 
     async def listar_estados(self) -> TypedToolResult[list[State]]:
@@ -99,7 +114,12 @@ class LocalidadesService:
         return TypedToolResult(
             ok=True,
             data=estados,
-            metadata=_metadata(endpoint=result.endpoint, params=result.params),
+            metadata=_metadata(
+                endpoint=result.endpoint,
+                params=result.params,
+                territorial_level=_NIVEL_ESTADO,
+                cache_hit=result.cache_hit,
+            ),
         )
 
     async def obter_estado(self, uf: str) -> TypedToolResult[State | None]:
@@ -110,14 +130,21 @@ class LocalidadesService:
             return TypedToolResult(
                 ok=False,
                 data=None,
-                metadata=_metadata(endpoint=exc.url, params={"uf": uf}),
+                metadata=_metadata(
+                    endpoint=exc.url, params={"uf": uf}, territorial_level=_NIVEL_ESTADO
+                ),
                 errors=[str(exc)],
             )
 
         return TypedToolResult(
             ok=True,
             data=state_from_raw(result.data),
-            metadata=_metadata(endpoint=result.endpoint, params=result.params),
+            metadata=_metadata(
+                endpoint=result.endpoint,
+                params=result.params,
+                territorial_level=_NIVEL_ESTADO,
+                cache_hit=result.cache_hit,
+            ),
         )
 
     async def listar_municipios(self, uf: str) -> TypedToolResult[list[Municipality]]:
@@ -128,7 +155,9 @@ class LocalidadesService:
             return TypedToolResult(
                 ok=False,
                 data=[],
-                metadata=_metadata(endpoint=exc.url, params={"uf": uf}),
+                metadata=_metadata(
+                    endpoint=exc.url, params={"uf": uf}, territorial_level=_NIVEL_MUNICIPIO
+                ),
                 errors=[str(exc)],
             )
 
@@ -136,7 +165,12 @@ class LocalidadesService:
         return TypedToolResult(
             ok=True,
             data=municipios,
-            metadata=_metadata(endpoint=result.endpoint, params=result.params),
+            metadata=_metadata(
+                endpoint=result.endpoint,
+                params=result.params,
+                territorial_level=_NIVEL_MUNICIPIO,
+                cache_hit=result.cache_hit,
+            ),
         )
 
     async def buscar_municipio(
@@ -163,7 +197,9 @@ class LocalidadesService:
             return TypedToolResult(
                 ok=False,
                 data=[],
-                metadata=_metadata(endpoint=exc.url, params=params),
+                metadata=_metadata(
+                    endpoint=exc.url, params=params, territorial_level=_NIVEL_MUNICIPIO
+                ),
                 errors=[str(exc)],
             )
 
@@ -173,7 +209,12 @@ class LocalidadesService:
         return TypedToolResult(
             ok=True,
             data=municipios,
-            metadata=_metadata(endpoint=result.endpoint, params=params),
+            metadata=_metadata(
+                endpoint=result.endpoint,
+                params=params,
+                territorial_level=_NIVEL_MUNICIPIO,
+                cache_hit=result.cache_hit,
+            ),
             warnings=warnings,
         )
 
@@ -211,14 +252,23 @@ class LocalidadesService:
             return TypedToolResult(
                 ok=False,
                 data=None,
-                metadata=_metadata(endpoint=exc.url, params={"municipio_id": codigo_ibge}),
+                metadata=_metadata(
+                    endpoint=exc.url,
+                    params={"municipio_id": codigo_ibge},
+                    territorial_level=_NIVEL_MUNICIPIO,
+                ),
                 errors=[str(exc)],
             )
 
         return TypedToolResult(
             ok=True,
             data=municipality_from_raw(result.data),
-            metadata=_metadata(endpoint=result.endpoint, params=result.params),
+            metadata=_metadata(
+                endpoint=result.endpoint,
+                params=result.params,
+                territorial_level=_NIVEL_MUNICIPIO,
+                cache_hit=result.cache_hit,
+            ),
         )
 
     async def listar_distritos(self, codigo_municipio: int) -> TypedToolResult[list[District]]:
@@ -229,7 +279,11 @@ class LocalidadesService:
             return TypedToolResult(
                 ok=False,
                 data=[],
-                metadata=_metadata(endpoint=exc.url, params={"municipio_id": codigo_municipio}),
+                metadata=_metadata(
+                    endpoint=exc.url,
+                    params={"municipio_id": codigo_municipio},
+                    territorial_level=_NIVEL_DISTRITO,
+                ),
                 errors=[str(exc)],
             )
 
@@ -237,5 +291,10 @@ class LocalidadesService:
         return TypedToolResult(
             ok=True,
             data=distritos,
-            metadata=_metadata(endpoint=result.endpoint, params=result.params),
+            metadata=_metadata(
+                endpoint=result.endpoint,
+                params=result.params,
+                territorial_level=_NIVEL_DISTRITO,
+                cache_hit=result.cache_hit,
+            ),
         )

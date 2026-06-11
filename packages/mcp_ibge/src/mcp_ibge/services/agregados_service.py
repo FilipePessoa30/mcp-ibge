@@ -7,11 +7,10 @@ rastreáveis (`TypedToolResult`) às tools MCP.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+import re
 from typing import Any
 
 from ..clients.agregados import AgregadosClient
-from ..config import get_settings
 from ..schemas.agregados import (
     AgregadoMetadata,
     AgregadoPeriod,
@@ -24,8 +23,13 @@ from ..schemas.agregados import (
     agregado_variable_from_raw,
     agregados_summary_from_lista,
 )
-from ..schemas.common import SourceMetadata, TypedToolResult
+from ..schemas.common import SourceMetadata, TypedToolResult, build_metadata
 from ..utils.errors import IBGEClientError
+
+# Nível territorial fixo do indicador de população por município.
+_NIVEL_MUNICIPIO = "N6"
+
+_NIVEL_PATTERN = re.compile(r"N\d+")
 
 # Agregado SIDRA "Estimativas de população residente" (variável "População
 # residente estimada"), usado por `consultar_populacao_municipio`.
@@ -50,13 +54,32 @@ def _resolver_localidades(localidades: str) -> str:
     return _LOCALIDADE_ALIASES.get(localidades.strip().lower(), localidades)
 
 
-def _metadata(*, endpoint: str, params: dict[str, Any]) -> SourceMetadata:
-    return SourceMetadata(
-        source_name=get_settings().source_name,
+def _extrair_niveis_territoriais(localidades: str) -> str | None:
+    """Extrai os níveis territoriais (ex.: "N1", "N6") de uma string `localidades`.
+
+    `localidades` pode combinar múltiplos níveis separados por "|" (ex.:
+    "N3[33,35]|N6[3550308]"). Retorna os níveis únicos, na ordem em que
+    aparecem, separados por "|" (ou `None` se nenhum for encontrado).
+    """
+    niveis = dict.fromkeys(_NIVEL_PATTERN.findall(localidades))
+    return "|".join(niveis) or None
+
+
+def _metadata(
+    *,
+    endpoint: str,
+    params: dict[str, Any],
+    period: str | None = None,
+    territorial_level: str | None = None,
+    cache_hit: bool = False,
+) -> SourceMetadata:
+    return build_metadata(
         source_url=endpoint,
         endpoint=endpoint,
         params=params,
-        retrieved_at=datetime.now(UTC),
+        period=period,
+        territorial_level=territorial_level,
+        cache_hit=cache_hit,
     )
 
 
@@ -100,7 +123,9 @@ class AgregadosService:
             params["texto"] = texto
 
         return TypedToolResult(
-            ok=True, data=agregados, metadata=_metadata(endpoint=result.endpoint, params=params)
+            ok=True,
+            data=agregados,
+            metadata=_metadata(endpoint=result.endpoint, params=params, cache_hit=result.cache_hit),
         )
 
     async def obter_metadados_agregado(
@@ -120,7 +145,9 @@ class AgregadosService:
         return TypedToolResult(
             ok=True,
             data=agregado_metadata_from_raw(result.data),
-            metadata=_metadata(endpoint=result.endpoint, params=result.params),
+            metadata=_metadata(
+                endpoint=result.endpoint, params=result.params, cache_hit=result.cache_hit
+            ),
         )
 
     async def listar_variaveis_agregado(
@@ -141,7 +168,9 @@ class AgregadosService:
         return TypedToolResult(
             ok=True,
             data=variaveis,
-            metadata=_metadata(endpoint=result.endpoint, params=result.params),
+            metadata=_metadata(
+                endpoint=result.endpoint, params=result.params, cache_hit=result.cache_hit
+            ),
         )
 
     async def listar_periodos_agregado(
@@ -162,7 +191,9 @@ class AgregadosService:
         return TypedToolResult(
             ok=True,
             data=periodos,
-            metadata=_metadata(endpoint=result.endpoint, params=result.params),
+            metadata=_metadata(
+                endpoint=result.endpoint, params=result.params, cache_hit=result.cache_hit
+            ),
         )
 
     async def listar_localidades_agregado(
@@ -182,7 +213,9 @@ class AgregadosService:
                 ok=False,
                 data=[],
                 metadata=_metadata(
-                    endpoint=exc.url, params={"agregado_id": agregado_id, "niveis": niveis}
+                    endpoint=exc.url,
+                    params={"agregado_id": agregado_id, "niveis": niveis},
+                    territorial_level=niveis,
                 ),
                 errors=[str(exc)],
             )
@@ -190,7 +223,12 @@ class AgregadosService:
         return TypedToolResult(
             ok=True,
             data=result.data,
-            metadata=_metadata(endpoint=result.endpoint, params=result.params),
+            metadata=_metadata(
+                endpoint=result.endpoint,
+                params=result.params,
+                territorial_level=niveis,
+                cache_hit=result.cache_hit,
+            ),
         )
 
     async def consultar_agregado(
@@ -228,7 +266,12 @@ class AgregadosService:
             return TypedToolResult(
                 ok=False,
                 data=[],
-                metadata=_metadata(endpoint=exc.url, params=params),
+                metadata=_metadata(
+                    endpoint=exc.url,
+                    params=params,
+                    period=periodos,
+                    territorial_level=_extrair_niveis_territoriais(localidades_resolvidas),
+                ),
                 errors=[str(exc)],
             )
 
@@ -236,7 +279,15 @@ class AgregadosService:
         return TypedToolResult(
             ok=True,
             data=valores,
-            metadata=_metadata(endpoint=result.endpoint, params=result.params),
+            metadata=_metadata(
+                endpoint=result.endpoint,
+                params=result.params,
+                period=str(result.params.get("periodos", periodos)),
+                territorial_level=_extrair_niveis_territoriais(
+                    str(result.params.get("localidades", localidades_resolvidas))
+                ),
+                cache_hit=result.cache_hit,
+            ),
         )
 
     async def consultar_populacao_municipio(
@@ -276,7 +327,12 @@ class AgregadosService:
             return TypedToolResult(
                 ok=False,
                 data=[],
-                metadata=_metadata(endpoint=exc.url, params=params),
+                metadata=_metadata(
+                    endpoint=exc.url,
+                    params=params,
+                    period=periodos,
+                    territorial_level=_NIVEL_MUNICIPIO,
+                ),
                 errors=[
                     f"Não foi possível obter a população do município {codigo_municipio} "
                     f"usando o agregado {AGREGADO_POPULACAO_ESTIMADA} (variável "
@@ -294,5 +350,11 @@ class AgregadosService:
         return TypedToolResult(
             ok=True,
             data=valores,
-            metadata=_metadata(endpoint=result.endpoint, params=params),
+            metadata=_metadata(
+                endpoint=result.endpoint,
+                params=params,
+                period=periodos,
+                territorial_level=_NIVEL_MUNICIPIO,
+                cache_hit=result.cache_hit,
+            ),
         )

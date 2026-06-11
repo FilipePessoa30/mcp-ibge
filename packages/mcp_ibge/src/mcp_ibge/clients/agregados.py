@@ -74,8 +74,8 @@ class AgregadosClient(AsyncIBGEClient):
         if assunto:
             params["assunto"] = assunto
 
-        data = await self.get_json("", params=params or None)
-        return IBGEResult(data=data, endpoint=self.base_url, params=params)
+        data, cache_hit = await self.get_json("", params=params or None)
+        return IBGEResult(data=data, endpoint=self.base_url, params=params, cache_hit=cache_hit)
 
     async def get_agregado_metadata(self, agregado_id: str) -> IBGEResult:
         """`GET /agregados/{agregado_id}/metadados` — variáveis, períodos e níveis territoriais."""
@@ -83,11 +83,13 @@ class AgregadosClient(AsyncIBGEClient):
         path = f"/{agregado_id}/metadados"
         url = f"{self.base_url}{path}"
 
-        data = await self.get_json(path)
+        data, cache_hit = await self.get_json(path)
         _garantir_resposta_nao_vazia(
             data, url=url, mensagem=f'Agregado "{agregado_id}" não encontrado.'
         )
-        return IBGEResult(data=data, endpoint=url, params={"agregado_id": agregado_id})
+        return IBGEResult(
+            data=data, endpoint=url, params={"agregado_id": agregado_id}, cache_hit=cache_hit
+        )
 
     async def get_agregado_localidades(self, agregado_id: str, niveis: str) -> IBGEResult:
         """`GET /agregados/{agregado_id}/localidades/{niveis}` — localidades disponíveis."""
@@ -96,7 +98,7 @@ class AgregadosClient(AsyncIBGEClient):
         path = f"/{agregado_id}/localidades/{niveis}"
         url = f"{self.base_url}{path}"
 
-        data = await self.get_json(path)
+        data, cache_hit = await self.get_json(path)
         _garantir_resposta_nao_vazia(
             data,
             url=url,
@@ -106,7 +108,10 @@ class AgregadosClient(AsyncIBGEClient):
             ),
         )
         return IBGEResult(
-            data=data, endpoint=url, params={"agregado_id": agregado_id, "niveis": niveis}
+            data=data,
+            endpoint=url,
+            params={"agregado_id": agregado_id, "niveis": niveis},
+            cache_hit=cache_hit,
         )
 
     async def get_agregado_periodos(self, agregado_id: str) -> IBGEResult:
@@ -115,11 +120,13 @@ class AgregadosClient(AsyncIBGEClient):
         path = f"/{agregado_id}/periodos"
         url = f"{self.base_url}{path}"
 
-        data = await self.get_json(path)
+        data, cache_hit = await self.get_json(path)
         _garantir_resposta_nao_vazia(
             data, url=url, mensagem=f'Agregado "{agregado_id}" não encontrado.'
         )
-        return IBGEResult(data=data, endpoint=url, params={"agregado_id": agregado_id})
+        return IBGEResult(
+            data=data, endpoint=url, params={"agregado_id": agregado_id}, cache_hit=cache_hit
+        )
 
     async def get_agregado_variaveis(self, agregado_id: str) -> IBGEResult:
         """`GET /agregados/{agregado_id}/variaveis` — variáveis disponíveis."""
@@ -127,11 +134,13 @@ class AgregadosClient(AsyncIBGEClient):
         path = f"/{agregado_id}/variaveis"
         url = f"{self.base_url}{path}"
 
-        data = await self.get_json(path)
+        data, cache_hit = await self.get_json(path)
         _garantir_resposta_nao_vazia(
             data, url=url, mensagem=f'Agregado "{agregado_id}" não encontrado.'
         )
-        return IBGEResult(data=data, endpoint=url, params={"agregado_id": agregado_id})
+        return IBGEResult(
+            data=data, endpoint=url, params={"agregado_id": agregado_id}, cache_hit=cache_hit
+        )
 
     async def query_agregado(
         self,
@@ -157,7 +166,7 @@ class AgregadosClient(AsyncIBGEClient):
         if view:
             query["view"] = view
 
-        data = await self.get_json(path, params=query)
+        data, cache_hit = await self.get_json(path, params=query)
         _garantir_resposta_nao_vazia(
             data,
             url=url,
@@ -173,4 +182,4 @@ class AgregadosClient(AsyncIBGEClient):
             "periodos": periodos,
             **query,
         }
-        return IBGEResult(data=data, endpoint=url, params=params)
+        return IBGEResult(data=data, endpoint=url, params=params, cache_hit=cache_hit)

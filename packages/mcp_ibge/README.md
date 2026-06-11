@@ -55,8 +55,13 @@ JSON response with full source metadata so the answer can be verified.
 - **Municipality code resolution** — fuzzy, accent- and case-insensitive
   search from a name to the 7-digit IBGE code, with disambiguation warnings.
 - **Typed JSON responses** — every tool is backed by Pydantic models.
+- **Standard response envelope** — every tool returns `{"ok": ..., "data":
+  ..., "metadata": {...}, "warnings": [...], "errors": [...]}`, on success and
+  on failure.
 - **Source metadata on every response** — `source_name`, `source_url`,
-  `endpoint`, `params` and `retrieved_at` for full traceability.
+  `official_source`, `endpoint`, `params`, `retrieved_at`, `period`,
+  `territorial_level`, `license_note`, `version` and `cache_hit` for full
+  traceability.
 - **In-memory TTL cache** — avoids repeated calls to the IBGE API within a
   session (configurable, can be disabled).
 - **Tests** — full `pytest` + `respx` suite, no network access required.
@@ -177,6 +182,8 @@ variables (prefix `MCP_IBGE_`) or a `.env` file — see
 | --- | --- | --- |
 | `MCP_IBGE_API_BASE_URL` | `https://servicodados.ibge.gov.br/api` | Base URL shared by the IBGE APIs. Restricted to official IBGE domains (`https://servicodados.ibge.gov.br`) — see [docs/security.md](docs/security.md). |
 | `MCP_IBGE_SOURCE_NAME` | `IBGE - Instituto Brasileiro de Geografia e Estatística` | Name shown in `metadata.source_name`. |
+| `MCP_IBGE_OFFICIAL_SOURCE_URL` | `https://www.ibge.gov.br/` | Institutional URL shown in `metadata.official_source`. |
+| `MCP_IBGE_LICENSE_NOTE` | _(see `.env.example`)_ | License/usage note shown in `metadata.license_note`. |
 | `MCP_IBGE_USER_AGENT` | `mcp-ibge/0.2.0` | `User-Agent` header used for IBGE requests. |
 | `MCP_IBGE_TIMEOUT` | `30.0` | HTTP timeout (seconds) for each IBGE request. |
 | `MCP_IBGE_MAX_RESPONSE_SIZE_BYTES` | `5000000` | Maximum response body size (bytes) accepted from the IBGE API. |
@@ -189,10 +196,12 @@ variables (prefix `MCP_IBGE_`) or a `.env` file — see
 
 ## Available tools
 
-Every tool returns `{"metadata": {...}, "data": ...}` on success or
-`{"metadata": {...}, "error": "..."}` on failure. Localidades tools may also
-include a `warnings` list when a search is ambiguous. See
-[docs/tools.md](docs/tools.md) for full argument reference and
+Every tool returns the same envelope, on success or failure:
+`{"ok": ..., "data": ..., "metadata": {...}, "warnings": [...], "errors": [...]}`.
+`warnings`/`errors` are lists of `{"message": ..., "code": ...}` objects —
+e.g. Localidades tools populate `warnings` when a search is ambiguous. See
+[docs/data_sources.md](docs/data_sources.md) for the full envelope/metadata
+reference, [docs/tools.md](docs/tools.md) for full argument reference, and
 [examples/agent_recipes/mcp_ibge_queries.md](../../examples/agent_recipes/mcp_ibge_queries.md)
 for more examples.
 

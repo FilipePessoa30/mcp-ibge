@@ -13,7 +13,7 @@ src/mcp_ibge/
 │   ├── localidades.py    # LocalidadesClient (regiões, estados, municípios)
 │   └── agregados.py      # AgregadosClient (lista, metadados, dados do SIDRA)
 ├── schemas/              # Modelos Pydantic: validação e envelope de resposta
-│   ├── common.py          # SourceMetadata, TypedToolResult, ToolResponse/ToolErrorResponse, build_response
+│   ├── common.py          # SourceMetadata, TypedToolResult, ToolResponse, ToolWarning/ToolError, build_metadata/build_tool_response
 │   ├── localidades.py     # Region, State, Municipality, District + conversores *_from_raw
 │   └── agregados.py       # AgregadoSummary, AgregadoMetadata, AgregadoVariable, AgregadoPeriod, AgregadoQueryResult + conversores *_from_raw
 ├── services/             # Regras de negócio: validação, filtros, aliases, indicadores
@@ -33,8 +33,9 @@ src/mcp_ibge/
 
 1. Um cliente MCP chama uma tool (ex.: `consultar_populacao_municipio`).
 2. A tool (em `tools/`) delega para o `service` correspondente e envolve o
-   resultado com `run_typed_tool()`, que monta o envelope
-   `{"metadata": ..., "data" ou "error": ...}` (opcionalmente com `"warnings"`).
+   resultado com `run_typed_tool()`, que monta o envelope padrão
+   `{"ok": ..., "data": ..., "metadata": ..., "warnings": [...], "errors": [...]}`,
+   igual em sucesso ou erro.
 3. O `service` aplica regras de negócio (filtros, validação com Pydantic,
    resolução de aliases, conversão `*_from_raw`) e delega ao `client`.
    `localidades_service` e `agregados_service` retornam

@@ -80,9 +80,8 @@ for a detailed description of `mcp-ibge`'s internal layers and request flow.
 ## Guidelines
 
 - **Response envelope**: every tool must return
-  `{"metadata": {...}, "data": ...}` on success or
-  `{"metadata": {...}, "error": "..."}` on failure — see
-  [docs/data_sources.md](docs/data_sources.md).
+  `{"ok": ..., "data": ..., "metadata": {...}, "warnings": [...], "errors": [...]}`,
+  on success and on failure — see [docs/data_sources.md](docs/data_sources.md).
 - **Validate inputs**: validate parameters before any network call (see
   [docs/security.md](docs/security.md) and
   [packages/mcp_ibge/docs/security.md](packages/mcp_ibge/docs/security.md)).

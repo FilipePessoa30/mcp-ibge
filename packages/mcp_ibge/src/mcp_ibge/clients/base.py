@@ -39,12 +39,15 @@ class IBGEResult:
         raw: Corpo da resposta bruta da API, antes de qualquer filtro local
             (ex.: lista completa de municípios antes da busca por nome).
             `None` quando `data` já corresponde à resposta bruta.
+        cache_hit: `True` se `data` veio do cache em memória, sem fazer uma
+            nova requisição HTTP.
     """
 
     data: Any
     endpoint: str
     params: dict[str, Any] = field(default_factory=dict)
     raw: Any = None
+    cache_hit: bool = False
 
 
 def _cache_key(url: str, params: dict[str, Any] | None) -> tuple[str, tuple[Any, ...]]:
@@ -84,8 +87,11 @@ class AsyncIBGEClient:
         params: dict[str, Any] | None = None,
         *,
         use_cache: bool = True,
-    ) -> Any:
-        """Executa um GET em `base_url + path` e retorna o corpo JSON decodificado.
+    ) -> tuple[Any, bool]:
+        """Executa um GET em `base_url + path` e retorna `(dados, cache_hit)`.
+
+        `dados` é o corpo JSON decodificado e `cache_hit` indica se o valor
+        veio do cache em memória, sem nova requisição HTTP.
 
         Levanta uma subclasse de `IBGEClientError` em caso de timeout, erro de
         conexão, status HTTP de erro ou corpo que não seja JSON válido.
@@ -99,7 +105,7 @@ class AsyncIBGEClient:
             cached = cache.get(key)
             if cached is not None:
                 logger.debug("cache hit: %s params=%s", url, params)
-                return cached
+                return cached, True
 
         logger.debug("GET %s params=%s", url, params)
         headers = {"User-Agent": settings.user_agent, "Accept": "application/json"}
@@ -131,4 +137,4 @@ class AsyncIBGEClient:
 
         if cache is not None:
             cache.set(key, data)
-        return data
+        return data, False

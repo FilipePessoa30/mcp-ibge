@@ -16,23 +16,33 @@ Documentação oficial: <https://servicodados.ibge.gov.br/api/docs>.
 
 ## Formato do envelope de resposta
 
-Toda tool retorna um objeto JSON com dois campos: `metadata` e, dependendo
-do resultado, `data` (sucesso) ou `error` (falha).
+Toda tool retorna um objeto JSON com o mesmo formato, em sucesso ou erro:
+`{"ok": ..., "data": ..., "metadata": {...}, "warnings": [...], "errors": [...]}`
+(ver `mcp_ibge.schemas.common.ToolResponse`).
 
 ### Sucesso
 
 ```json
 {
+  "ok": true,
+  "data": [
+    { "id": 1, "sigla": "N", "nome": "Norte" }
+  ],
   "metadata": {
     "source_name": "IBGE - Instituto Brasileiro de Geografia e Estatística",
     "source_url": "https://servicodados.ibge.gov.br/api/v1/localidades/regioes",
-    "retrieved_at": "2026-06-10T12:00:00Z",
+    "official_source": "https://www.ibge.gov.br/",
     "endpoint": "https://servicodados.ibge.gov.br/api/v1/localidades/regioes",
-    "params": {}
+    "params": {},
+    "retrieved_at": "2026-06-10T12:00:00Z",
+    "period": null,
+    "territorial_level": "N2",
+    "license_note": "Dados públicos do IBGE (Instituto Brasileiro de Geografia e Estatística). Verifique a fonte oficial antes de uso em relatórios ou decisões.",
+    "version": "0.2.0",
+    "cache_hit": false
   },
-  "data": [
-    { "id": 1, "sigla": "N", "nome": "Norte" }
-  ]
+  "warnings": [],
+  "errors": []
 }
 ```
 
@@ -40,16 +50,40 @@ do resultado, `data` (sucesso) ou `error` (falha).
 
 ```json
 {
+  "ok": false,
+  "data": null,
   "metadata": {
     "source_name": "IBGE - Instituto Brasileiro de Geografia e Estatística",
     "source_url": "https://servicodados.ibge.gov.br/api/v1/localidades/municipios/0000000",
-    "retrieved_at": "2026-06-10T12:00:00Z",
+    "official_source": "https://www.ibge.gov.br/",
     "endpoint": "https://servicodados.ibge.gov.br/api/v1/localidades/municipios/0000000",
-    "params": { "municipio_id": 0 }
+    "params": { "municipio_id": 0 },
+    "retrieved_at": "2026-06-10T12:00:00Z",
+    "period": null,
+    "territorial_level": "N6",
+    "license_note": "Dados públicos do IBGE (Instituto Brasileiro de Geografia e Estatística). Verifique a fonte oficial antes de uso em relatórios ou decisões.",
+    "version": "0.2.0",
+    "cache_hit": false
   },
-  "error": "Erro HTTP 404 ao consultar https://servicodados.ibge.gov.br/api/v1/localidades/municipios/0000000"
+  "warnings": [],
+  "errors": [
+    {
+      "message": "Erro HTTP 404 ao consultar https://servicodados.ibge.gov.br/api/v1/localidades/municipios/0000000",
+      "code": null
+    }
+  ]
 }
 ```
+
+### Campos do envelope
+
+| Campo | Descrição |
+| --- | --- |
+| `ok` | `true` se a consulta foi bem-sucedida, `false` caso contrário. |
+| `data` | Dados retornados pela tool em caso de sucesso (lista, objeto ou `null`). Em caso de erro, normalmente `null`. |
+| `metadata` | Metadados de proveniência da resposta (ver tabela abaixo). |
+| `warnings` | Lista de avisos não fatais (`{"message": ..., "code": ...}`), preservados mesmo quando `ok` é `false`. |
+| `errors` | Lista de erros (`{"message": ..., "code": ...}`), sem stack trace. Vazia quando `ok` é `true`. |
 
 ### Campos de `metadata`
 
@@ -57,23 +91,29 @@ do resultado, `data` (sucesso) ou `error` (falha).
 | --- | --- |
 | `source_name` | Nome da fonte oficial dos dados (configurável via `MCP_IBGE_SOURCE_NAME`). |
 | `source_url` | URL efetivamente consultada para obter os dados/erro. |
-| `retrieved_at` | Timestamp ISO 8601 (UTC, sufixo `Z`) do momento da consulta. |
+| `official_source` | URL institucional da fonte oficial (configurável via `MCP_IBGE_OFFICIAL_SOURCE_URL`), distinta do `endpoint` específico da consulta. |
 | `endpoint` | URL do endpoint da API do IBGE utilizado. |
 | `params` | Parâmetros usados na consulta (após resolução de aliases, filtros, etc.). |
+| `retrieved_at` | Timestamp ISO 8601 (UTC, sufixo `Z`) do momento da consulta. |
+| `period` | Período(s) de referência dos dados (ex.: `"2024"`, `"-1"`), ou `null` quando não se aplica. |
+| `territorial_level` | Nível(is) territorial(is) (SIDRA/IBGE) dos dados, ex.: `"N6"` (município), ou `null` quando não se aplica. |
+| `license_note` | Nota de licença/uso dos dados (configurável via `MCP_IBGE_LICENSE_NOTE`). |
+| `version` | Versão do pacote `mcp-ibge` que gerou a resposta. |
+| `cache_hit` | `true` se a resposta veio do cache em memória, `false` se foi obtida da API do IBGE. |
 
 Esse formato garante que qualquer dado retornado por uma tool possa ser
 **rastreado até a fonte oficial**, com data/hora da consulta e os parâmetros
 exatos utilizados — importante para auditoria e para o usuário verificar a
 informação na fonte original.
 
-### Campo opcional `warnings`
+### Avisos (`warnings`)
 
 As tools de Localidades que envolvem busca aproximada (ex.:
-`buscar_municipio`, `obter_codigo_municipio`) podem incluir um campo adicional
-`warnings` (lista de strings) na resposta de sucesso, sinalizando ambiguidades
-— por exemplo, quando mais de um município corresponde ao nome buscado. Nesse
-caso, `data` traz os candidatos encontrados e o aviso sugere refinar a busca
-(ex.: informando `uf`).
+`buscar_municipio`, `obter_codigo_municipio`) podem incluir itens em
+`warnings` na resposta de sucesso, sinalizando ambiguidades — por exemplo,
+quando mais de um município corresponde ao nome buscado. Nesse caso, `data`
+traz os candidatos encontrados e o aviso sugere refinar a busca (ex.,
+informando `uf`).
 
 ## Cache
 

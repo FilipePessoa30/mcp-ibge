@@ -8,11 +8,32 @@ reutilizados pelos testes de cliente, serviço, tools e cache.
 
 from __future__ import annotations
 
+import json
 from typing import Any
 
 import pytest
 
+from mcp_ibge.config import get_settings
 from mcp_ibge.utils.cache import clear_cache
+
+# Chaves do envelope padrão `{ok, data, metadata, warnings, errors}` (ver
+# `mcp_ibge.schemas.common.ToolResponse`) e de `SourceMetadata`, usadas pelos
+# testes de contrato das tools.
+ENVELOPE_KEYS = {"ok", "data", "metadata", "warnings", "errors"}
+
+METADATA_KEYS = {
+    "source_name",
+    "source_url",
+    "official_source",
+    "endpoint",
+    "params",
+    "retrieved_at",
+    "period",
+    "territorial_level",
+    "license_note",
+    "version",
+    "cache_hit",
+}
 
 
 @pytest.fixture(autouse=True)
@@ -21,6 +42,44 @@ def _isolar_cache():
     clear_cache()
     yield
     clear_cache()
+
+
+def assert_metadata_contract(metadata: dict[str, Any]) -> None:
+    """Garante que `metadata` contém exatamente os 11 campos de `SourceMetadata`."""
+    assert set(metadata) == METADATA_KEYS
+    assert metadata["source_name"] == get_settings().source_name
+    assert isinstance(metadata["source_url"], str)
+    assert isinstance(metadata["official_source"], str)
+    assert isinstance(metadata["endpoint"], str)
+    assert isinstance(metadata["params"], dict)
+    assert isinstance(metadata["retrieved_at"], str)
+    assert metadata["period"] is None or isinstance(metadata["period"], str)
+    assert metadata["territorial_level"] is None or isinstance(metadata["territorial_level"], str)
+    assert metadata["license_note"] is None or isinstance(metadata["license_note"], str)
+    assert isinstance(metadata["version"], str)
+    assert isinstance(metadata["cache_hit"], bool)
+
+
+def assert_envelope_contract(structured: dict[str, Any]) -> None:
+    """Garante que `structured` segue o contrato padrão `{ok, data, metadata, warnings, errors}`.
+
+    Verifica que a resposta é um dict JSON-serializável, com `ok` booleano,
+    `metadata` contendo os 11 campos de `SourceMetadata`, e `warnings`/`errors`
+    como listas de objetos `{message, code}`.
+    """
+    assert isinstance(structured, dict)
+    assert set(structured) == ENVELOPE_KEYS
+    assert isinstance(structured["ok"], bool)
+    assert isinstance(structured["warnings"], list)
+    assert isinstance(structured["errors"], list)
+    for warning in structured["warnings"]:
+        assert set(warning) == {"message", "code"}
+        assert isinstance(warning["message"], str)
+    for error in structured["errors"]:
+        assert set(error) == {"message", "code"}
+        assert isinstance(error["message"], str)
+    assert_metadata_contract(structured["metadata"])
+    json.dumps(structured)
 
 
 @pytest.fixture

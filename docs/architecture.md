@@ -61,8 +61,8 @@ follow the same internal shape:
 ## Conventions shared across modules
 
 - **Response envelope**: every tool returns
-  `{"metadata": {...}, "data"/"error": ...}`, optionally with `warnings` —
-  see [data_sources.md](data_sources.md).
+  `{"ok": ..., "data": ..., "metadata": {...}, "warnings": [...], "errors": [...]}`,
+  the same shape on success or failure — see [data_sources.md](data_sources.md).
 - **Security baseline**: no shell execution, no local file access beyond
   config loading, no arbitrary URLs, an allowlist of upstream API hosts,
   input validation before any network call, timeouts and response size

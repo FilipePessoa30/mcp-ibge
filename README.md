@@ -24,9 +24,11 @@ tools** an agent (Claude Desktop, Cursor, or any MCP-compatible client) can
 call directly. Every tool across every module follows the same conventions:
 
 - **Typed, validated responses** — every tool is backed by Pydantic models.
-- **Traceable by design** — every response includes `metadata`
-  (`source_name`, `source_url`, `endpoint`, `params`, `retrieved_at`), so any
-  number can be checked against its official source.
+- **Traceable by design** — every response is `{"ok": ..., "data": ...,
+  "metadata": {...}, "warnings": [...], "errors": [...]}`, with `metadata`
+  (`source_name`, `source_url`, `official_source`, `endpoint`, `params`,
+  `retrieved_at`, `period`, `territorial_level`, `license_note`, `version`,
+  `cache_hit`) so any number can be checked against its official source.
 - **Safe by default** — no shell execution, no arbitrary file/URL access,
   outbound requests restricted to an allowlist of official domains, input
   validation before any network call. See [docs/security.md](docs/security.md).

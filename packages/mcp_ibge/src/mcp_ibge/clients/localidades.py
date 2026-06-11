@@ -39,34 +39,50 @@ class LocalidadesClient(AsyncIBGEClient):
     async def get_regioes(self) -> IBGEResult:
         """`GET /regioes` — as 5 grandes regiões geográficas do Brasil."""
         path = "/regioes"
-        data = await self.get_json(path)
-        return IBGEResult(data=data, endpoint=f"{self.base_url}{path}", params={})
+        data, cache_hit = await self.get_json(path)
+        return IBGEResult(
+            data=data, endpoint=f"{self.base_url}{path}", params={}, cache_hit=cache_hit
+        )
 
     async def get_estados(self) -> IBGEResult:
         """`GET /estados` — os 26 estados e o Distrito Federal."""
         path = "/estados"
-        data = await self.get_json(path)
-        return IBGEResult(data=data, endpoint=f"{self.base_url}{path}", params={})
+        data, cache_hit = await self.get_json(path)
+        return IBGEResult(
+            data=data, endpoint=f"{self.base_url}{path}", params={}, cache_hit=cache_hit
+        )
 
     async def get_estado(self, uf_or_id: str) -> IBGEResult:
         """`GET /estados/{uf}` — detalhes de um estado (sigla ou código IBGE)."""
         uf = validate_uf(uf_or_id, url=f"{self.base_url}/estados/{uf_or_id}")
         path = f"/estados/{uf}"
-        data = await self.get_json(path)
-        return IBGEResult(data=data, endpoint=f"{self.base_url}{path}", params={"uf": uf_or_id})
+        data, cache_hit = await self.get_json(path)
+        return IBGEResult(
+            data=data,
+            endpoint=f"{self.base_url}{path}",
+            params={"uf": uf_or_id},
+            cache_hit=cache_hit,
+        )
 
     async def get_municipios(self) -> IBGEResult:
         """`GET /municipios` — todos os municípios do Brasil."""
         path = "/municipios"
-        data = await self.get_json(path)
-        return IBGEResult(data=data, endpoint=f"{self.base_url}{path}", params={})
+        data, cache_hit = await self.get_json(path)
+        return IBGEResult(
+            data=data, endpoint=f"{self.base_url}{path}", params={}, cache_hit=cache_hit
+        )
 
     async def get_municipios_by_uf(self, uf_or_id: str) -> IBGEResult:
         """`GET /estados/{uf}/municipios` — municípios de uma UF (sigla ou código)."""
         uf = validate_uf(uf_or_id, url=f"{self.base_url}/estados/{uf_or_id}/municipios")
         path = f"/estados/{uf}/municipios"
-        data = await self.get_json(path)
-        return IBGEResult(data=data, endpoint=f"{self.base_url}{path}", params={"uf": uf_or_id})
+        data, cache_hit = await self.get_json(path)
+        return IBGEResult(
+            data=data,
+            endpoint=f"{self.base_url}{path}",
+            params={"uf": uf_or_id},
+            cache_hit=cache_hit,
+        )
 
     async def get_municipio(self, municipio_id: int) -> IBGEResult:
         """`GET /municipios/{id}` — detalhes de um município pelo código IBGE."""
@@ -74,9 +90,12 @@ class LocalidadesClient(AsyncIBGEClient):
             municipio_id, url=f"{self.base_url}/municipios/{municipio_id}"
         )
         path = f"/municipios/{codigo}"
-        data = await self.get_json(path)
+        data, cache_hit = await self.get_json(path)
         return IBGEResult(
-            data=data, endpoint=f"{self.base_url}{path}", params={"municipio_id": codigo}
+            data=data,
+            endpoint=f"{self.base_url}{path}",
+            params={"municipio_id": codigo},
+            cache_hit=cache_hit,
         )
 
     async def search_municipios(self, nome: str, uf: str | None = None) -> IBGEResult:
@@ -101,7 +120,11 @@ class LocalidadesClient(AsyncIBGEClient):
             params["uf"] = uf
 
         return IBGEResult(
-            data=encontrados, endpoint=result.endpoint, params=params, raw=result.data
+            data=encontrados,
+            endpoint=result.endpoint,
+            params=params,
+            raw=result.data,
+            cache_hit=result.cache_hit,
         )
 
     async def get_distritos_by_municipio(self, municipio_id: int) -> IBGEResult:
@@ -110,7 +133,10 @@ class LocalidadesClient(AsyncIBGEClient):
             municipio_id, url=f"{self.base_url}/municipios/{municipio_id}/distritos"
         )
         path = f"/municipios/{codigo}/distritos"
-        data = await self.get_json(path)
+        data, cache_hit = await self.get_json(path)
         return IBGEResult(
-            data=data, endpoint=f"{self.base_url}{path}", params={"municipio_id": codigo}
+            data=data,
+            endpoint=f"{self.base_url}{path}",
+            params={"municipio_id": codigo},
+            cache_hit=cache_hit,
         )

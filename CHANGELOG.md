@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **BREAKING: standardized response envelope for all `mcp-ibge` tools.**
+  Every tool (Localidades and Agregados/SIDRA) now returns the same JSON
+  shape on success **and** on failure:
+  `{"ok": ..., "data": ..., "metadata": {...}, "warnings": [...], "errors": [...]}`.
+  Previously, success responses were `{"metadata": {...}, "data": ...}` and
+  error responses were `{"metadata": {...}, "error": "..."}`.
+  - `metadata` (`SourceMetadata`) gained four new fields:
+    `official_source`, `period`, `territorial_level`, `license_note`,
+    `version` and `cache_hit` (in addition to the existing `source_name`,
+    `source_url`, `endpoint`, `params`, `retrieved_at`).
+  - `warnings` and `errors` are now lists of `{"message": ..., "code": ...}`
+    objects (instead of a list of strings / a single string), and are always
+    present (even when empty).
+  - New settings `MCP_IBGE_OFFICIAL_SOURCE_URL` and `MCP_IBGE_LICENSE_NOTE`
+    control `metadata.official_source` and `metadata.license_note`.
+  - See [docs/data_sources.md](docs/data_sources.md) for the full envelope
+    reference.
 - **Repository restructured as `mcp-data-br`**, a uv workspace (monorepo)
   for a growing collection of MCP servers for Brazilian public data. The
   `mcp-ibge` server itself is unchanged (no version bump) — only its

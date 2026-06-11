@@ -139,11 +139,11 @@ descritivas mas sem dados internos sensíveis (stack trace, variáveis locais,
 caminhos do sistema de arquivos).
 
 A camada `tools/` (`run_typed_tool` em `tools/__init__.py`) captura **qualquer**
-exceção e converte para um envelope de erro estruturado
-(`{"metadata": {...}, "error": "<mensagem>"}`):
+exceção e converte para o envelope padrão com `ok=False`
+(`{"ok": false, "data": null, "metadata": {...}, "warnings": [...], "errors": [{"message": "<mensagem>", "code": null}]}`):
 
-- o `error` retornado ao cliente MCP é sempre a mensagem da exceção (curta e
-  informativa), nunca o traceback;
+- a mensagem em `errors[0].message` retornada ao cliente MCP é sempre a
+  mensagem da exceção (curta e informativa), nunca o traceback;
 - o traceback completo é registrado via `logger.exception(...)`, que vai para
   `stderr` (ver §11) — útil para depuração local, mas não chega ao cliente MCP;
 - o servidor nunca derruba (não há exceção não tratada que propague até

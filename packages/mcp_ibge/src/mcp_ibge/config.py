@@ -34,6 +34,16 @@ class Settings(BaseSettings):
     source_name: str = "IBGE - Instituto Brasileiro de Geografia e Estatística"
     user_agent: str = "mcp-ibge/0.2.0"
 
+    # URL da fonte oficial (institucional) dos dados, distinta do `source_url`/
+    # `endpoint` específico de cada consulta (ver `metadata.official_source`).
+    official_source_url: str = "https://www.ibge.gov.br/"
+
+    # Nota de licença/uso incluída em `metadata.license_note` de toda resposta.
+    license_note: str | None = (
+        "Dados públicos do IBGE (Instituto Brasileiro de Geografia e Estatística). "
+        "Verifique a fonte oficial antes de uso em relatórios ou decisões."
+    )
+
     # Timeout (em segundos) aplicado a cada requisição HTTP às APIs do IBGE.
     timeout: float = 30.0
 

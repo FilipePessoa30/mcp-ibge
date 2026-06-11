@@ -13,7 +13,7 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from ..schemas.common import TypedToolResult, build_error_response, build_response
+from ..schemas.common import TypedToolResult, build_metadata, build_tool_response
 
 logger = logging.getLogger(__name__)
 
@@ -29,38 +29,41 @@ def _dump(value: Any) -> Any:
 
 async def run_typed_tool(call: Awaitable[TypedToolResult[Any]]) -> dict[str, Any]:
     """Executa uma chamada de serviço que retorna `TypedToolResult` e converte
-    o resultado no envelope padrão de resposta.
+    o resultado no envelope padrão `{ok, data, metadata, warnings, errors}`.
 
-    Em caso de sucesso (`ok=True`) retorna `{"metadata": ..., "data": ...}`,
-    incluindo `"warnings"` quando houver. Em caso de falha (`ok=False` ou
-    exceção inesperada) retorna `{"metadata": ..., "error": "..."}`.
+    Em caso de exceção inesperada (rede de segurança), monta uma resposta
+    `ok=False` com uma mensagem de erro genérica, sem expor stack trace.
+    Quando `ok=False` e o serviço não informou `errors`, os `warnings`
+    (preservados em `warnings`) também são usados para preencher `errors`,
+    garantindo que toda resposta de falha explique o motivo.
     """
     try:
         result = await call
     except Exception as exc:  # pragma: no cover - rede de segurança
         logger.exception("Erro inesperado ao executar tool tipada")
-        return build_error_response(
-            source_url="", endpoint="", params={}, error=f"Erro inesperado: {exc}"
+        return build_tool_response(
+            ok=False,
+            data=None,
+            metadata=build_metadata(source_url="", endpoint=""),
+            errors=[f"Erro inesperado: {exc}"],
         )
 
     metadata = result.metadata
+    errors = list(result.errors)
 
     if not result.ok:
-        error = "; ".join(result.errors or result.warnings) or "Erro desconhecido"
-        logger.warning("Erro ao consultar %s: %s", metadata.endpoint, error)
-        return build_error_response(
-            source_url=metadata.source_url,
-            endpoint=metadata.endpoint,
-            params=metadata.params,
-            error=error,
+        logger.warning(
+            "Erro ao consultar %s: %s",
+            metadata.endpoint,
+            "; ".join(errors or result.warnings) or "Erro desconhecido",
         )
+        if not errors:
+            errors = list(result.warnings) or ["Erro desconhecido"]
 
-    response = build_response(
-        source_url=metadata.source_url,
-        endpoint=metadata.endpoint,
-        params=metadata.params,
+    return build_tool_response(
+        ok=result.ok,
         data=_dump(result.data),
+        metadata=metadata,
+        warnings=result.warnings,
+        errors=errors,
     )
-    if result.warnings:
-        response["warnings"] = result.warnings
-    return response

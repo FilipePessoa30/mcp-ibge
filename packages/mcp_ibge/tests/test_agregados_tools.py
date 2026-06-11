@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import json
-
 import httpx
 import pytest
 import respx
@@ -12,6 +10,8 @@ from mcp_ibge.clients.agregados import AGREGADOS_PATH
 from mcp_ibge.clients.localidades import LOCALIDADES_PATH
 from mcp_ibge.config import get_settings
 from mcp_ibge.server import mcp
+
+from .conftest import assert_envelope_contract
 
 AGREGADOS_BASE_URL = f"{get_settings().api_base_url}{AGREGADOS_PATH}"
 LOCALIDADES_BASE_URL = f"{get_settings().api_base_url}{LOCALIDADES_PATH}"
@@ -97,14 +97,6 @@ async def test_todas_as_tools_de_agregados_estao_registradas():
     assert AGREGADOS_TOOLS.issubset(nomes)
 
 
-def _assert_contrato_json(structured: dict) -> None:
-    """Garante que a resposta é um dict JSON-serializável com `metadata` e `data`/`error`."""
-    assert isinstance(structured, dict)
-    assert "metadata" in structured
-    assert ("data" in structured) ^ ("error" in structured)
-    json.dumps(structured)
-
-
 @respx.mock
 @pytest.mark.parametrize(
     ("nome_tool", "argumentos", "endpoint_mock", "resposta_mock"),
@@ -149,7 +141,7 @@ async def test_tool_retorna_contrato_json_em_caso_de_sucesso(
 
     _, structured = await mcp.call_tool(nome_tool, argumentos)
 
-    _assert_contrato_json(structured)
+    assert_envelope_contract(structured)
     assert "data" in structured
 
 
@@ -168,7 +160,7 @@ async def test_consultar_populacao_municipio_resolve_codigo_e_consulta_agregado(
         "consultar_populacao_municipio", {"nome": "Florianópolis", "uf": "SC"}
     )
 
-    _assert_contrato_json(structured)
+    assert_envelope_contract(structured)
     assert structured["data"][0]["localidade_nome"] == "Florianópolis"
     assert structured["data"][0]["valor"] == 537000.0
     assert structured["metadata"]["params"]["nome"] == "Florianópolis"
@@ -192,9 +184,9 @@ async def test_consultar_populacao_municipio_com_ano_nao_avisa_sobre_periodo():
         "consultar_populacao_municipio", {"nome": "Florianópolis", "uf": "SC", "ano": 2010}
     )
 
-    _assert_contrato_json(structured)
+    assert_envelope_contract(structured)
     assert structured["data"][0]["periodo"] == "2010"
-    assert "warnings" not in structured
+    assert structured["warnings"] == []
 
 
 @respx.mock
@@ -212,9 +204,9 @@ async def test_consultar_populacao_municipio_dado_ausente_inclui_warning():
         "consultar_populacao_municipio", {"nome": "Florianópolis", "uf": "SC"}
     )
 
-    _assert_contrato_json(structured)
+    assert_envelope_contract(structured)
     assert structured["data"][0]["valor"] is None
-    assert any("não está disponível" in aviso for aviso in structured["warnings"])
+    assert any("não está disponível" in aviso["message"] for aviso in structured["warnings"])
 
 
 @respx.mock
@@ -231,9 +223,10 @@ async def test_consultar_populacao_municipio_nome_ambiguo_retorna_erro_com_candi
         "consultar_populacao_municipio", {"nome": "São José", "uf": "SP"}
     )
 
-    _assert_contrato_json(structured)
-    assert "error" in structured
-    assert "São José dos Campos" in structured["error"]
+    assert_envelope_contract(structured)
+    assert structured["ok"] is False
+    assert structured["data"] == []
+    assert any("São José dos Campos" in erro["message"] for erro in structured["errors"])
 
 
 @respx.mock
@@ -246,8 +239,10 @@ async def test_consultar_populacao_municipio_nome_inexistente_retorna_erro():
         "consultar_populacao_municipio", {"nome": "Cidade Inexistente", "uf": "SC"}
     )
 
-    _assert_contrato_json(structured)
-    assert "error" in structured
+    assert_envelope_contract(structured)
+    assert structured["ok"] is False
+    assert structured["data"] == []
+    assert structured["errors"]
 
 
 @respx.mock
@@ -256,5 +251,7 @@ async def test_tool_retorna_contrato_json_em_caso_de_erro():
 
     _, structured = await mcp.call_tool("obter_metadados_agregado", {"agregado_id": "9999999"})
 
-    _assert_contrato_json(structured)
-    assert "error" in structured
+    assert_envelope_contract(structured)
+    assert structured["ok"] is False
+    assert structured["data"] is None
+    assert structured["errors"]
