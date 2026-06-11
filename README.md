@@ -256,8 +256,9 @@ Dados** API:
 
 See [docs/data_sources.md](docs/data_sources.md) for the response envelope
 format, [docs/architecture.md](docs/architecture.md) for the layered
-architecture, and [docs/security.md](docs/security.md) for security
-considerations.
+architecture, [docs/security.md](docs/security.md) for security
+considerations, and [docs/examples.md](docs/examples.md) for worked
+end-to-end examples (with real JSON responses) of agents using these tools.
 
 ## Roadmap
 
