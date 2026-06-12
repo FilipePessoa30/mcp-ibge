@@ -39,6 +39,140 @@ The project is organized as a single **uv workspace (monorepo)**: each data
 source gets its own installable package under [`packages/`](packages/), all
 sharing the same conventions and tooling.
 
+## 30-second demo
+
+![Demo: comparing Rio de Janeiro, Niterói and Maricá with mcp-ibge](docs/assets/demo.gif)
+
+> 🎥 GIF placeholder — see [Recording the demo GIF](#recording-the-demo-gif)
+> below to generate `docs/assets/demo.gif`.
+
+**Prompt** (typed into Claude Desktop / Cursor / any MCP client):
+
+> "Compare Rio de Janeiro, Niterói and Maricá using official Brazilian public
+> data."
+
+**What the agent does** — no API keys, no scraping, just typed tool calls
+over `stdio`:
+
+```python
+# 1. Resolve each name to an IBGE municipality (fuzzy match, accent/case-insensitive)
+buscar_municipio(nome="Rio de Janeiro")
+buscar_municipio(nome="Niterói")
+buscar_municipio(nome="Maricá")
+
+# 2. Get the 7-digit IBGE codes
+obter_codigo_municipio(nome="Rio de Janeiro", uf="RJ")  # -> 3304557
+obter_codigo_municipio(nome="Niterói", uf="RJ")          # -> 3303302
+obter_codigo_municipio(nome="Maricá", uf="RJ")           # -> 3302904
+
+# 3. Check which indicators are available before asking for them
+#    (today: estimated population, agregado SIDRA 6579)
+
+# 4. One call does the rest: resolves + compares + cites sources
+comparar_municipios(
+    municipios=[
+        {"nome": "Rio de Janeiro", "uf": "RJ"},
+        {"nome": "Niterói", "uf": "RJ"},
+        {"nome": "Maricá", "uf": "RJ"},
+    ],
+    indicadores=["populacao_estimada"],
+)
+```
+
+**Final answer, straight from `comparar_municipios`**:
+
+| Município | UF | Estimated population (2024) |
+| --- | --- | --- |
+| Rio de Janeiro | RJ | 6,211,423 |
+| Niterói | RJ | 516,981 |
+| Maricá | RJ | 187,051 |
+
+- **Source**: IBGE — Agregados/SIDRA, table `6579` (Estimativas de
+  População), period `2024` — every row in `data.fontes` is a direct,
+  openable URL on `servicodados.ibge.gov.br`.
+- **Warnings**: none for this query — but if a municipality name were
+  ambiguous, not found, or an indicator weren't implemented yet, that would
+  show up explicitly in `warnings` / `data.municipios_nao_resolvidos` /
+  `data.indicadores_nao_implementados` instead of a guessed number. See the
+  [`compare_municipalities` recipe](examples/agent_recipes/compare_municipalities/)
+  for the full request/response and error cases.
+
+In other words:
+
+- **Local-first** — runs over `stdio` on your machine, no hosted backend.
+- **No API keys** — every data source is a free, public government API.
+- **Official data sources** — every value is traceable to a
+  `servicodados.ibge.gov.br` endpoint via `metadata`/`data.fontes`.
+- **Structured responses** — `{"ok", "data", "metadata", "warnings",
+  "errors"}` every time, ready for an agent to parse and act on.
+- **Safe by default** — no shell access, no arbitrary URLs, outbound
+  requests restricted to an allowlist (see [docs/security.md](docs/security.md)).
+- **Agent-ready** — typed tools an LLM can call directly, with ready-made
+  recipes in [examples/agent_recipes/](examples/agent_recipes/).
+
+### Try it yourself
+
+```bash
+git clone https://github.com/FilipePessoa30/mcp-ibge.git mcp-data-br
+cd mcp-data-br
+uv sync --all-extras
+uv run mcp-ibge
+```
+
+Minimal MCP client config (e.g. `claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "ibge": {
+      "command": "uvx",
+      "args": ["mcp-ibge"]
+    }
+  }
+}
+```
+
+Then ask the prompt above. More configs (Cursor, Open WebUI, dev/local
+checkout) are in [examples/](examples/); more ready-made prompts are in
+[examples/agent_recipes/](examples/agent_recipes/).
+
+### Recording the demo GIF
+
+To regenerate `docs/assets/demo.gif`, record a terminal session running an
+MCP client (or `uv run mcp-ibge` plus a small script) asking the prompt
+above, then convert it to a GIF. Two common ways:
+
+- **[VHS](https://github.com/charmbracelet/vhs)** (recommended — scripted,
+  reproducible):
+
+  ```bash
+  # demo.tape
+  Output docs/assets/demo.gif
+  Set FontSize 16
+  Set Width 1000
+  Set Height 600
+  Type "uv run mcp-ibge"
+  Enter
+  Sleep 1s
+  # ... drive your MCP client / script here, then let it settle
+  Sleep 2s
+  ```
+
+  ```bash
+  vhs demo.tape
+  ```
+
+- **[asciinema](https://asciinema.org/) + [agg](https://github.com/asciinema/agg)**:
+
+  ```bash
+  asciinema rec demo.cast
+  # run the demo, then Ctrl-D to stop
+  agg demo.cast docs/assets/demo.gif
+  ```
+
+Keep the recording under ~30 seconds and trim dead time so the GIF stays
+small enough for the README to load quickly.
+
 ## Available modules
 
 | Module | Status | Data | Docs |
