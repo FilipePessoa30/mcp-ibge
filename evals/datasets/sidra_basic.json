@@ -1,0 +1,56 @@
+[
+  {
+    "id": "sidra_001",
+    "user_question": "Quais agregados do SIDRA estão relacionados à população?",
+    "expected_tools": ["listar_agregados"],
+    "expected_fields": [
+      { "path": "ok", "equals": true },
+      { "path": "data", "min_length": 1 },
+      { "path": "metadata.source_name", "contains": "IBGE" }
+    ],
+    "expected_answer_contains": ["população"],
+    "should_warn": false,
+    "difficulty": "easy",
+    "category": "sidra"
+  },
+  {
+    "id": "sidra_002",
+    "user_question": "Qual é a população estimada de Niterói (RJ)?",
+    "expected_tools": ["consultar_populacao_municipio"],
+    "expected_fields": [
+      { "path": "ok", "equals": true },
+      { "path": "data", "min_length": 1 },
+      { "path": "data.0.localidade_nome", "equals": "Niterói" }
+    ],
+    "expected_answer_contains": ["Niterói"],
+    "should_warn": true,
+    "difficulty": "medium",
+    "category": "sidra"
+  },
+  {
+    "id": "sidra_003",
+    "user_question": "Quais variáveis estão disponíveis no agregado 6579 do SIDRA?",
+    "expected_tools": ["listar_variaveis_agregado"],
+    "expected_fields": [
+      { "path": "ok", "equals": true },
+      { "path": "data", "min_length": 1 }
+    ],
+    "expected_answer_contains": ["população"],
+    "should_warn": false,
+    "difficulty": "easy",
+    "category": "sidra"
+  },
+  {
+    "id": "sidra_004",
+    "user_question": "Sugira uma consulta SIDRA para responder 'população dos municípios em 2024'.",
+    "expected_tools": ["sugerir_consulta_sidra"],
+    "expected_fields": [
+      { "path": "ok", "equals": true },
+      { "path": "data", "not_null": true }
+    ],
+    "expected_answer_contains": ["agregado"],
+    "should_warn": true,
+    "difficulty": "hard",
+    "category": "sidra"
+  }
+]

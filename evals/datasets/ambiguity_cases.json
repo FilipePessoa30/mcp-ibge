@@ -1,0 +1,42 @@
+[
+  {
+    "id": "amb_001",
+    "user_question": "Busque municípios chamados São José.",
+    "expected_tools": ["buscar_municipio"],
+    "expected_fields": [
+      { "path": "data", "min_length": 2 },
+      { "path": "ok", "equals": true }
+    ],
+    "expected_answer_contains": ["São José"],
+    "should_warn": true,
+    "difficulty": "medium",
+    "category": "ambiguity"
+  },
+  {
+    "id": "amb_002",
+    "user_question": "Qual é o código IBGE do município de São José, em São Paulo?",
+    "expected_tools": ["obter_codigo_municipio"],
+    "expected_fields": [
+      { "path": "ok", "equals": false },
+      { "path": "data", "equals": null }
+    ],
+    "expected_answer_contains": ["São José dos Campos", "São José do Rio Preto"],
+    "should_warn": true,
+    "difficulty": "hard",
+    "category": "ambiguity"
+  },
+  {
+    "id": "amb_003",
+    "user_question": "Gere um perfil municipal para o município de São José, em São Paulo.",
+    "expected_tools": ["gerar_perfil_municipal"],
+    "expected_fields": [
+      { "path": "ok", "equals": false },
+      { "path": "data", "equals": null },
+      { "path": "errors", "min_length": 1 }
+    ],
+    "expected_answer_contains": ["São José dos Campos", "São José do Rio Preto"],
+    "should_warn": false,
+    "difficulty": "hard",
+    "category": "ambiguity"
+  }
+]

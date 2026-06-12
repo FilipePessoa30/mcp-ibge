@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>mcp-data-br — relatório de evals</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 2rem; color: #1a1a1a; }
+  h1 { margin-bottom: 0.25rem; }
+  .subtitle { color: #555; margin-top: 0; }
+  table { border-collapse: collapse; width: 100%; margin: 1.5rem 0; font-size: 0.9rem; }
+  th, td { border: 1px solid #ddd; padding: 0.4rem 0.6rem; text-align: left; }
+  th { background: #f5f5f5; }
+  td.pass { background: #e6f4ea; color: #1e7d34; font-weight: 600; }
+  td.fail { background: #fbe9e7; color: #c0392b; font-weight: 600; }
+  td.partial { background: #fff8e1; color: #8a6d00; font-weight: 600; }
+  h2 { margin-top: 2rem; }
+</style>
+</head>
+<body>
+<h1>mcp-data-br — relatório de evals</h1>
+<p class="subtitle">Resultados de: <code>example_results.json</code> &middot;
+12 caso(s)</p>
+
+<h2>Resumo geral</h2>
+<table>
+  <tr><th>Tool selection</th><th>Field accuracy</th><th>Source presence</th><th>Warning correctness</th><th>Structured output</th><th>Answer contains</th></tr>
+  <tr><td>67%</td><td>67%</td><td>✓</td><td>✓</td><td>✓</td><td>75%</td></tr>
+</table>
+
+<h2>Resumo por categoria</h2>
+<table>
+  <tr><th>Categoria</th><th>Tool selection</th><th>Field accuracy</th><th>Source presence</th><th>Warning correctness</th><th>Structured output</th><th>Answer contains</th></tr>
+  <tr><td>ambiguity</td><td>67%</td><td>67%</td><td>✓</td><td>✓</td><td>✓</td><td>100%</td></tr><tr><td>localidades</td><td>40%</td><td>40%</td><td>✓</td><td>✓</td><td>✓</td><td>40%</td></tr><tr><td>sidra</td><td>100%</td><td>100%</td><td>✓</td><td>✓</td><td>✓</td><td>100%</td></tr>
+</table>
+
+<h2>Casos</h2>
+<table>
+  <tr>
+    <th>ID</th>
+    <th>Pergunta</th>
+    <th>Categoria</th>
+    <th>Dificuldade</th>
+    <th>Tools esperadas</th>
+    <th>Tools chamadas</th>
+    <th>Tentado</th>
+    <th>Tool selection</th><th>Field accuracy</th><th>Source presence</th><th>Warning correctness</th><th>Structured output</th><th>Answer contains</th>
+  </tr>
+  <tr><td>amb_001</td><td>Busque municípios chamados São José.</td><td>ambiguity</td><td>medium</td><td>buscar_municipio</td><td>buscar_municipio</td><td class="pass">✓</td><td class="pass">100%</td><td class="pass">100%</td><td class="pass">✓</td><td class="pass">✓</td><td class="pass">✓</td><td class="pass">100%</td></tr><tr><td>amb_002</td><td>Qual é o código IBGE do município de São José, em São Paulo?</td><td>ambiguity</td><td>hard</td><td>obter_codigo_municipio</td><td>buscar_municipio</td><td class="pass">✓</td><td class="fail">0%</td><td class="fail">0%</td><td class="fail">✗</td><td class="fail">✗</td><td class="fail">✗</td><td class="pass">100%</td></tr><tr><td>amb_003</td><td>Gere um perfil municipal para o município de São José, em São Paulo.</td><td>ambiguity</td><td>hard</td><td>gerar_perfil_municipal</td><td>gerar_perfil_municipal</td><td class="pass">✓</td><td class="pass">100%</td><td class="pass">100%</td><td class="pass">✓</td><td class="pass">✓</td><td class="pass">✓</td><td class="pass">100%</td></tr><tr><td>loc_001</td><td>Qual é o código IBGE de Niterói, RJ?</td><td>localidades</td><td>easy</td><td>obter_codigo_municipio</td><td>obter_codigo_municipio</td><td class="pass">✓</td><td class="pass">100%</td><td class="pass">100%</td><td class="pass">✓</td><td class="pass">✓</td><td class="pass">✓</td><td class="pass">100%</td></tr><tr><td>loc_002</td><td>Liste os municípios do Rio de Janeiro.</td><td>localidades</td><td>easy</td><td>listar_municipios</td><td>listar_municipios</td><td class="pass">✓</td><td class="pass">100%</td><td class="pass">100%</td><td class="pass">✓</td><td class="pass">✓</td><td class="pass">✓</td><td class="pass">100%</td></tr><tr><td>loc_003</td><td>Quais são as regiões do Brasil?</td><td>localidades</td><td>easy</td><td>listar_regioes</td><td></td><td class="fail">✗ (sem resultado)</td><td class="fail">0%</td><td class="fail">0%</td><td class="fail">✗</td><td class="fail">✗</td><td class="fail">✗</td><td class="fail">0%</td></tr><tr><td>loc_004</td><td>A que UF e região pertence o município de código IBGE 3303302?</td><td>localidades</td><td>medium</td><td>obter_municipio_por_codigo</td><td></td><td class="fail">✗ (sem resultado)</td><td class="fail">0%</td><td class="fail">0%</td><td class="fail">✗</td><td class="fail">✗</td><td class="fail">✗</td><td class="fail">0%</td></tr><tr><td>loc_005</td><td>Liste os distritos do município com código IBGE 3304557 (Rio de Janeiro).</td><td>localidades</td><td>medium</td><td>listar_distritos</td><td></td><td class="fail">✗ (sem resultado)</td><td class="fail">0%</td><td class="fail">0%</td><td class="fail">✗</td><td class="fail">✗</td><td class="fail">✗</td><td class="fail">0%</td></tr><tr><td>sidra_001</td><td>Quais agregados do SIDRA estão relacionados à população?</td><td>sidra</td><td>easy</td><td>listar_agregados</td><td>listar_agregados</td><td class="pass">✓</td><td class="pass">100%</td><td class="pass">100%</td><td class="pass">✓</td><td class="pass">✓</td><td class="pass">✓</td><td class="pass">100%</td></tr><tr><td>sidra_002</td><td>Qual é a população estimada de Niterói (RJ)?</td><td>sidra</td><td>medium</td><td>consultar_populacao_municipio</td><td>consultar_populacao_municipio</td><td class="pass">✓</td><td class="pass">100%</td><td class="pass">100%</td><td class="pass">✓</td><td class="pass">✓</td><td class="pass">✓</td><td class="pass">100%</td></tr><tr><td>sidra_003</td><td>Quais variáveis estão disponíveis no agregado 6579 do SIDRA?</td><td>sidra</td><td>easy</td><td>listar_variaveis_agregado</td><td>listar_variaveis_agregado</td><td class="pass">✓</td><td class="pass">100%</td><td class="pass">100%</td><td class="pass">✓</td><td class="pass">✓</td><td class="pass">✓</td><td class="pass">100%</td></tr><tr><td>sidra_004</td><td>Sugira uma consulta SIDRA para responder &#x27;população dos municípios em 2024&#x27;.</td><td>sidra</td><td>hard</td><td>sugerir_consulta_sidra</td><td>sugerir_consulta_sidra</td><td class="pass">✓</td><td class="pass">100%</td><td class="pass">100%</td><td class="pass">✓</td><td class="pass">✓</td><td class="pass">✓</td><td class="pass">100%</td></tr>
+</table>
+</body>
+</html>

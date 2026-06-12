@@ -1,0 +1,67 @@
+[
+  {
+    "id": "loc_001",
+    "user_question": "Qual é o código IBGE de Niterói, RJ?",
+    "expected_tools": ["obter_codigo_municipio"],
+    "expected_fields": [
+      { "path": "data", "equals": 3303302 }
+    ],
+    "expected_answer_contains": ["3303302"],
+    "should_warn": false,
+    "difficulty": "easy",
+    "category": "localidades"
+  },
+  {
+    "id": "loc_002",
+    "user_question": "Liste os municípios do Rio de Janeiro.",
+    "expected_tools": ["listar_municipios"],
+    "expected_fields": [
+      { "path": "metadata.params.uf", "equals": "RJ" },
+      { "path": "metadata.source_name", "contains": "IBGE" },
+      { "path": "data", "min_length": 1 }
+    ],
+    "expected_answer_contains": ["Rio de Janeiro"],
+    "should_warn": false,
+    "difficulty": "easy",
+    "category": "localidades"
+  },
+  {
+    "id": "loc_003",
+    "user_question": "Quais são as regiões do Brasil?",
+    "expected_tools": ["listar_regioes"],
+    "expected_fields": [
+      { "path": "data", "min_length": 5 },
+      { "path": "metadata.source_name", "contains": "IBGE" }
+    ],
+    "expected_answer_contains": ["Sudeste", "Sul", "Nordeste", "Norte", "Centro-Oeste"],
+    "should_warn": false,
+    "difficulty": "easy",
+    "category": "localidades"
+  },
+  {
+    "id": "loc_004",
+    "user_question": "A que UF e região pertence o município de código IBGE 3303302?",
+    "expected_tools": ["obter_municipio_por_codigo"],
+    "expected_fields": [
+      { "path": "data.uf_sigla", "equals": "RJ" },
+      { "path": "data.regiao_nome", "equals": "Sudeste" }
+    ],
+    "expected_answer_contains": ["RJ", "Sudeste"],
+    "should_warn": false,
+    "difficulty": "medium",
+    "category": "localidades"
+  },
+  {
+    "id": "loc_005",
+    "user_question": "Liste os distritos do município com código IBGE 3304557 (Rio de Janeiro).",
+    "expected_tools": ["listar_distritos"],
+    "expected_fields": [
+      { "path": "data", "min_length": 1 },
+      { "path": "metadata.source_name", "contains": "IBGE" }
+    ],
+    "expected_answer_contains": ["Rio de Janeiro"],
+    "should_warn": false,
+    "difficulty": "medium",
+    "category": "localidades"
+  }
+]
