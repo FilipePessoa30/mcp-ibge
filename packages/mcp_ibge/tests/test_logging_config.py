@@ -53,8 +53,10 @@ def test_json_formatter_inclui_exc_info_quando_presente():
 
 
 def test_configure_logging_emite_json_em_stderr(capsys, monkeypatch):
-    settings = __import__("mcp_ibge.config", fromlist=["get_settings"]).get_settings().model_copy(
-        update={"log_level": "INFO"}
+    settings = (
+        __import__("mcp_ibge.config", fromlist=["get_settings"])
+        .get_settings()
+        .model_copy(update={"log_level": "INFO"})
     )
     monkeypatch.setattr("mcp_ibge.logging_config.get_settings", lambda: settings)
 

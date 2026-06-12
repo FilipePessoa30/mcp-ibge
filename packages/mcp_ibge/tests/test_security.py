@@ -118,7 +118,9 @@ async def test_get_json_aborta_resposta_maior_que_o_limite(monkeypatch):
     settings = get_settings().model_copy(update={"max_response_size_bytes": 10})
     monkeypatch.setattr("mcp_ibge.clients.base.get_settings", lambda: settings)
 
-    respx.get(f"{BASE_URL}/teste").mock(return_value=httpx.Response(200, json={"dados": "x" * 1000}))
+    respx.get(f"{BASE_URL}/teste").mock(
+        return_value=httpx.Response(200, json={"dados": "x" * 1000})
+    )
 
     client = AsyncIBGEClient()
     with pytest.raises(IBGEServerError) as exc_info:
@@ -246,7 +248,9 @@ def test_validate_variaveis_rejeita_entrada_maliciosa(valor: str):
         validate_variaveis(valor)
 
 
-@pytest.mark.parametrize("valor", ["100; DROP TABLE x", "<script>alert(1)</script>", 0, 101, True, 3.5])
+@pytest.mark.parametrize(
+    "valor", ["100; DROP TABLE x", "<script>alert(1)</script>", 0, 101, True, 3.5]
+)
 def test_validate_limit_rejeita_entrada_maliciosa(valor):
     with pytest.raises(IBGEValidationError):
         validate_limit(valor)
