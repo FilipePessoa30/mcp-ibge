@@ -262,6 +262,12 @@ for more examples.
 | `validar_consulta_sidra` | Validate query parameters against an aggregate's real metadata before querying. | `validar_consulta_sidra(agregado_id="6579", variaveis="9324", localidades="N6[3550308]", periodos="2024")` |
 | `executar_consulta_sidra_validada` | Validate, then call `consultar_agregado` only if validation passes. | `executar_consulta_sidra_validada(agregado_id="6579", variaveis="9324", localidades="N6[3550308]", periodos="2024")` |
 
+### Perfil Municipal
+
+| Tool | Description | Example |
+| --- | --- | --- |
+| `gerar_perfil_municipal` | Generate a basic municipality profile: identification (IBGE code, state, region, micro-region/intermediate region) plus available indicators (estimated population, when possible). Clearly separates obtained data (`data.indicadores`) from suggested-but-not-implemented indicators (`data.proximos_indicadores_sugeridos`). | `gerar_perfil_municipal(nome="Niterói", uf="RJ")` |
+
 **Resources & prompts**: `ibge://status` (server status: version, available
 tools, query time) and `comparar_municipios` (a prompt that guides comparing
 an indicator across municipalities, always citing source, period, territorial

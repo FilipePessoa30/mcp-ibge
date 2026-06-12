@@ -28,7 +28,7 @@ from pydantic import Field
 
 from .config import get_settings
 from .logging_config import configure_logging
-from .tools import agregados_tools, localidades_tools, sidra_tools
+from .tools import agregados_tools, localidades_tools, perfil_tools, sidra_tools
 
 _settings = get_settings()
 
@@ -37,8 +37,9 @@ mcp = FastMCP(
     instructions=(
         "Servidor MCP para consultar dados públicos e oficiais do IBGE: "
         "localidades (regiões, estados, municípios e seus códigos), agregados "
-        "estatísticos do SIDRA (com metadados de variáveis e períodos) e "
-        "indicadores de população. Toda resposta inclui metadados de fonte "
+        "estatísticos do SIDRA (com metadados de variáveis e períodos), "
+        "indicadores de população e perfis básicos de municípios "
+        "(`gerar_perfil_municipal`). Toda resposta inclui metadados de fonte "
         "(source_name, source_url, retrieved_at, endpoint, params) para "
         "rastreabilidade."
     ),
@@ -48,6 +49,7 @@ mcp = FastMCP(
 localidades_tools.register_localidades_tools(mcp)
 agregados_tools.register_agregados_tools(mcp)
 sidra_tools.register_sidra_tools(mcp)
+perfil_tools.register_perfil_tools(mcp)
 
 
 @mcp.resource("ibge://status")

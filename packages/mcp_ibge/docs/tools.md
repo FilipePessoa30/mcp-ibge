@@ -43,6 +43,10 @@ consultas, sem uso de LLM no servidor)
 20. [`validar_consulta_sidra`](#20-validar_consulta_sidra)
 21. [`executar_consulta_sidra_validada`](#21-executar_consulta_sidra_validada)
 
+**Perfil Municipal** (novo — combina Localidades e Indicadores)
+
+22. [`gerar_perfil_municipal`](#22-gerar_perfil_municipal)
+
 ## Formato da resposta
 
 Toda tool retorna um envelope JSON com `metadata` e (`data` ou `error`):
@@ -1696,9 +1700,151 @@ consulta não retornar dados, `errors` traz a mesma mensagem de
 
 ---
 
+## Perfil Municipal
+
+### 22. `gerar_perfil_municipal`
+
+**Descrição**: gera um perfil básico de um município a partir de `nome` e
+`uf`, combinando as tools de Localidades e de Indicadores em uma única
+resposta estruturada. Internamente:
+
+1. Resolve o código IBGE do município via
+   [`obter_codigo_municipio`](#5-obter_codigo_municipio) (mesma busca
+   *fuzzy* por `nome`/`uf`, com os mesmos `warnings`/`errors` em caso de
+   ambiguidade ou município não encontrado).
+2. Obtém os detalhes do município via
+   [`obter_municipio_por_codigo`](#6-obter_municipio_por_codigo): `nome`,
+   código IBGE, UF e região, mais a microrregião ou região intermediária
+   (extraída do JSON bruto retornado pela API de Localidades).
+3. Consulta a população residente estimada via
+   [`consultar_populacao_municipio`](#14-consultar_populacao_municipio).
+
+A resposta separa claramente **dados obtidos** (`indicadores`, com fonte
+rastreável) de **sugestões** (`proximos_indicadores_sugeridos`, apenas nomes
+de indicadores ainda não implementados — nunca valores). Indicadores que não
+puderem ser obtidos com segurança não aparecem em `indicadores`; em vez
+disso, a resposta inclui um `warning` explicando o motivo.
+
+**Parâmetros**:
+
+| Nome | Tipo | Obrigatório | Descrição |
+| --- | --- | --- | --- |
+| `nome` | `string` | sim | Nome do município. |
+| `uf` | `string` | sim | Sigla (ex.: `"RJ"`) ou código IBGE da UF. |
+| `ano` | `integer \| null` | não | Ano de referência para o indicador de população. Sem este parâmetro, usa o período mais recente disponível (`periodos="-1"`). |
+
+**Exemplo de chamada**:
+
+```python
+gerar_perfil_municipal(nome="Rio de Janeiro", uf="RJ")
+```
+
+**Exemplo de resposta JSON** (sem `ano` informado — período mais recente
+disponível):
+
+```json
+{
+  "ok": true,
+  "data": {
+    "municipio": {
+      "codigo_ibge": 3304557,
+      "nome": "Rio de Janeiro",
+      "uf_sigla": "RJ",
+      "uf_nome": "Rio de Janeiro",
+      "regiao_nome": "Sudeste",
+      "microrregiao_ou_regiao_intermediaria": {
+        "tipo": "microrregiao",
+        "id": 33018,
+        "nome": "Rio de Janeiro"
+      }
+    },
+    "indicadores": [
+      {
+        "indicador": "populacao_estimada",
+        "valor": 6211423.0,
+        "unidade": "Pessoas",
+        "periodo": "2024",
+        "agregado_id": "6579",
+        "variavel_id": "9324"
+      }
+    ],
+    "fontes": [
+      "https://servicodados.ibge.gov.br/api/v1/localidades/municipios/3304557",
+      "https://servicodados.ibge.gov.br/api/v3/agregados/6579/periodos/-1/variaveis/9324"
+    ],
+    "limitacoes": [
+      "Este perfil cobre apenas identificação básica do município e o indicador de população estimada; não inclui PIB, IDH, área territorial ou outros indicadores socioeconômicos.",
+      "O indicador de população usa o agregado SIDRA 6579 (Estimativas de população residente), que pode ser descontinuado ou renomeado pelo IBGE após um novo Censo."
+    ],
+    "proximos_indicadores_sugeridos": [
+      "Área territorial e densidade demográfica",
+      "PIB municipal e PIB per capita",
+      "IDH municipal",
+      "Distritos do município (via `listar_distritos`)",
+      "Indicadores educacionais e de saúde"
+    ]
+  },
+  "metadata": {
+    "source_name": "IBGE - Instituto Brasileiro de Geografia e Estatística",
+    "source_url": "https://servicodados.ibge.gov.br/api/v1/localidades/municipios/3304557",
+    "endpoint": "https://servicodados.ibge.gov.br/api/v1/localidades/municipios/3304557",
+    "params": {
+      "nome": "Rio de Janeiro",
+      "uf": "RJ",
+      "municipio_id": 3304557
+    },
+    "retrieved_at": "2026-06-11T12:00:00.000000+00:00",
+    "license_note": null
+  },
+  "warnings": [
+    "Nenhum \"ano\" foi informado para a população: retornado o período mais recente disponível no SIDRA (\"2024\")."
+  ],
+  "errors": []
+}
+```
+
+**Possíveis warnings**:
+
+- `Nenhum "ano" foi informado para a população: retornado o período mais recente disponível no SIDRA ("<periodo>").`
+  — emitido quando o parâmetro `ano` não é informado e a população foi
+  obtida com sucesso.
+- `Indicador de população não disponível: o SIDRA não retornou um valor para este município/período (dado ausente ou sigiloso).`
+  — emitido quando a consulta de população tem sucesso, mas o valor é
+  `null` (dado ausente/sigiloso); nesse caso, `indicadores` não inclui a
+  população.
+- `Indicador de população não pôde ser obtido: <detalhe>`
+  — emitido quando a consulta de população falha (ex.: agregado/variável
+  descontinuado pelo IBGE); nesse caso, `indicadores` não inclui a
+  população.
+- Avisos de [`obter_codigo_municipio`](#5-obter_codigo_municipio) (ex.: lista
+  de candidatos quando `nome` é ambíguo) também são propagados em caso de
+  erro.
+
+**Erros comuns**:
+
+| Situação | Mensagem (`error`) |
+| --- | --- |
+| Nenhum município corresponde a `nome`/`uf` | `Nenhum município encontrado para "<nome>" na UF "<uf>".` |
+| `nome` é ambíguo dentro da `uf` informada | `Encontrados N municípios para "<nome>": <nomes>. Refine a busca com "uf" ou um nome mais específico.` |
+| `uf` informada não corresponde a nenhuma sigla/código válido | `UF inválida: "XX". Use a sigla (ex.: "RJ") ou o código IBGE (ex.: "33").` |
+
+Mais os [erros comuns a todas as tools](#erros-comuns-a-todas-as-tools).
+
+**Fonte usada**:
+
+- [IBGE Localidades API](https://servicodados.ibge.gov.br/api/docs/localidades)
+  — `GET /localidades/estados/{uf}/municipios` (resolução do código IBGE) e
+  `GET /localidades/municipios/{id}` (identificação, UF, região,
+  microrregião/região intermediária).
+- [IBGE Agregados (SIDRA) API](https://servicodados.ibge.gov.br/api/docs/agregados)
+  — `GET /agregados/6579/periodos/{periodos}/variaveis/9324` (agregado
+  "Estimativas de população residente", [SIDRA tabela 6579](https://sidra.ibge.gov.br/tabela/6579)).
+
+---
+
 ## Resources e prompts
 
-Além das 21 tools acima, o servidor expõe:
+Além das 22 tools acima, o servidor expõe:
 
 - **Resource `ibge://status`**: status do servidor — `status`, `server`,
   `version`, lista de `tools` disponíveis e `timestamp` (UTC, ISO 8601). Não

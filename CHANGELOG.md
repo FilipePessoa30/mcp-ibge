@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Perfil Municipal** (`schemas/perfil.py` + `services/perfil_service.py` +
+  `tools/perfil_tools.py`): nova tool `gerar_perfil_municipal(nome, uf, ano=None)`
+  monta um perfil básico de município combinando as tools de Localidades
+  (identificação, UF, região e microrregião/região intermediária) e o
+  indicador de população estimada (`consultar_populacao_municipio`).
+  - A resposta separa `data.indicadores` (dados efetivamente obtidos do
+    IBGE, com fonte rastreável em `data.fontes`) de
+    `data.proximos_indicadores_sugeridos` (nomes de indicadores ainda não
+    implementados — nunca dados) e `data.limitacoes` (limitações conhecidas).
+  - Ambiguidade ou município não encontrado propaga o mesmo
+    `ok=False`/`warnings`/`errors` de `obter_codigo_municipio`; se a consulta
+    de população falhar ou retornar dado ausente/sigiloso, isso vira
+    `warning` e o indicador não aparece em `data.indicadores`. Nenhum valor é
+    inventado. See
+    [docs/tools.md](packages/mcp_ibge/docs/tools.md#22-gerar_perfil_municipal).
+
 - **SIDRA Query Builder** (`mcp_ibge.sidra` + `services/sidra_service.py` +
   `tools/sidra_tools.py`): 7 new tools to discover, explain, suggest and
   validate SIDRA queries against an aggregate's real metadata before

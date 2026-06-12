@@ -15,11 +15,13 @@ src/mcp_ibge/
 ├── schemas/              # Modelos Pydantic: validação e envelope de resposta
 │   ├── common.py          # SourceMetadata, TypedToolResult, ToolResponse, ToolWarning/ToolError, build_metadata/build_tool_response
 │   ├── localidades.py     # Region, State, Municipality, District + conversores *_from_raw
-│   └── agregados.py       # AgregadoSummary, AgregadoMetadata, AgregadoVariable, AgregadoPeriod, AgregadoQueryResult + conversores *_from_raw
+│   ├── agregados.py       # AgregadoSummary, AgregadoMetadata, AgregadoVariable, AgregadoPeriod, AgregadoQueryResult + conversores *_from_raw
+│   └── perfil.py          # PerfilMunicipal, MunicipioPerfil, IndicadorPerfil + extrair_microrregiao_ou_regiao_intermediaria
 ├── services/             # Regras de negócio: validação, filtros, aliases, indicadores
 │   ├── localidades_service.py  # retorna TypedToolResult[T] (data/metadata/warnings/errors)
 │   ├── agregados_service.py    # idem; constantes AGREGADO_POPULACAO_ESTIMADA / VARIAVEL_POPULACAO_ESTIMADA
-│   └── sidra_service.py        # SIDRA Query Builder: descoberta, sugestão, validação e execução
+│   ├── sidra_service.py        # SIDRA Query Builder: descoberta, sugestão, validação e execução
+│   └── perfil_service.py       # PerfilService: combina Localidades + população em um PerfilMunicipal
 ├── sidra/                # SIDRA Query Builder: parsing de metadados, validação local e sugestão
 │   ├── metadata_parser.py # parse_agregado_metadata(): JSON de /metadados -> AgregadoMetadataParsed
 │   ├── query_builder.py   # validar_consulta(): valida variaveis/localidades/periodos/classificacao
@@ -28,7 +30,8 @@ src/mcp_ibge/
 │   ├── __init__.py        # `run_typed_tool()` (TypedToolResult) -> envelope padrão
 │   ├── localidades_tools.py  # register_localidades_tools(mcp)
 │   ├── agregados_tools.py    # register_agregados_tools(mcp)
-│   └── sidra_tools.py        # register_sidra_tools(mcp): 7 tools do SIDRA Query Builder
+│   ├── sidra_tools.py        # register_sidra_tools(mcp): 7 tools do SIDRA Query Builder
+│   └── perfil_tools.py       # register_perfil_tools(mcp): gerar_perfil_municipal
 └── utils/
     ├── normalization.py   # normalize_text(): busca textual sem acento/caixa
     ├── cache.py            # TTLCache + singleton get_cache()/clear_cache()
@@ -57,6 +60,28 @@ níveis territoriais, variáveis, classificações, limitações em texto).
   internamente e só delega a `AgregadosService.consultar_agregado` se
   `data.valido=True` — nenhuma requisição de dados é feita para uma consulta
   inválida.
+
+## Perfil Municipal
+
+`perfil_service.PerfilService` não duplica acesso HTTP: reutiliza
+`LocalidadesService` (resolução de nome/UF para código IBGE, identificação,
+UF e região) e `AgregadosService.consultar_populacao_municipio` (indicador de
+população). `schemas/perfil.py` define `PerfilMunicipal` e
+`extrair_microrregiao_ou_regiao_intermediaria()`, que lê o JSON bruto
+(`Municipality.raw`) e localiza `microrregiao` ou
+`regiao-imediata.regiao-intermediaria`, dependendo da estrutura retornada
+pela API.
+
+- Ambiguidade ou município não encontrado em `obter_codigo_municipio` é
+  propagado diretamente (`ok=False`, mesmos `warnings`/`errors`) — nenhuma
+  outra requisição é feita.
+- Apenas indicadores efetivamente obtidos entram em `data.indicadores`; se a
+  consulta de população falhar ou retornar dado ausente/sigiloso, isso vira
+  um `warning` e o indicador simplesmente não aparece — nunca um valor
+  inventado.
+- `data.proximos_indicadores_sugeridos` é uma lista fixa de nomes de
+  indicadores ainda não implementados (ex.: PIB, IDH, área territorial) —
+  apenas sugestões, nunca dados.
 
 ## Fluxo de uma chamada
 
