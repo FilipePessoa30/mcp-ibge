@@ -170,7 +170,13 @@ under ~30 seconds so it stays small enough for the README to load quickly.
 | Module | Status | Data | Docs |
 | --- | --- | --- | --- |
 | [`mcp-ibge`](packages/mcp_ibge/) | **Stable** | IBGE — geographic locations (regions, states, municipalities, districts) and Agregados/SIDRA statistical aggregates | [README](packages/mcp_ibge/README.md) · [docs](packages/mcp_ibge/docs/) |
-| [`mcp-inep`](packages/mcp_inep/) | **Planning** (scaffold, no tools yet) | INEP — Censo Escolar, Ideb, Saeb, Enem, schools by município, education indicators | [README](packages/mcp_inep/README.md) · [roadmap](docs/modules/inep.md) |
+| [`mcp-inep`](packages/mcp_inep/) | **Planning** (scaffold, only `status` tool) | INEP — Censo Escolar, Ideb, Saeb, Enem, schools by município, education indicators | [README](packages/mcp_inep/README.md) · [roadmap](docs/modules/inep.md) |
+| [`mcp-dados-gov-br`](packages/mcp_dados_gov_br/) | **Planning** (scaffold, only `status` tool) | dados.gov.br — Portal Brasileiro de Dados Abertos: dataset/organization catalog | [README](packages/mcp_dados_gov_br/README.md) · [roadmap](docs/modules/dados-gov-br.md) |
+| [`mcp-bcb`](packages/mcp_bcb/) | **Planning** (scaffold, only `status` tool) | Banco Central do Brasil — SGS time series, exchange rates (PTAX), Selic | [README](packages/mcp_bcb/README.md) · [roadmap](docs/modules/bcb.md) |
+| [`mcp-rio`](packages/mcp_rio/) | **Planning** (scaffold, only `status` tool) | Data.Rio — open data from the City of Rio de Janeiro | [README](packages/mcp_rio/README.md) · [roadmap](docs/modules/rio.md) |
+| [`mcp-saude`](packages/mcp_saude/) | **Planning** (scaffold, only `status` tool) | DataSUS / Ministério da Saúde — health facilities (CNES) and indicators by município/UF | [README](packages/mcp_saude/README.md) · [roadmap](docs/modules/saude.md) |
+| [`mcp-transparencia`](packages/mcp_transparencia/) | **Planning** (scaffold, only `status` tool) | Portal da Transparência (CGU) — public spending, contracts and sanctions | [README](packages/mcp_transparencia/README.md) · [roadmap](docs/modules/transparencia.md) |
+| [`mcp-tesouro`](packages/mcp_tesouro/) | **Planning** (scaffold, only `status` tool) | Tesouro Nacional (SICONFI) — fiscal data for União, states and municípios | [README](packages/mcp_tesouro/README.md) · [roadmap](docs/modules/tesouro.md) |
 
 ## Secure by default
 
@@ -206,16 +212,23 @@ modules follow the same pattern.
 
 ## Planned modules
 
-mcp-data-br is designed to grow. Planned/possible future modules include
-`mcp-sidra` (a dedicated SIDRA module, split out of `mcp-ibge`),
-[`mcp-inep`](docs/modules/inep.md) (education data — Censo Escolar, Ideb,
-Saeb, Enem, schools by município; package scaffold already in
-[`packages/mcp_inep/`](packages/mcp_inep/)), `mcp-dados-gov-br` (generic
-dados.gov.br access), `mcp-bcb` (Banco Central indicators) and `mcp-rio`
-(Rio de Janeiro open data). See [docs/roadmap.md](docs/roadmap.md) for
-details — except for `mcp-inep`'s scaffold, none of these are implemented
-yet, but the workspace is structured so they can be added as new packages
-without touching existing ones.
+mcp-data-br is designed to grow. Beyond `mcp-ibge` (stable), seven modules
+already exist as **scaffolds** — installable packages exposing only the
+shared `status` tool, with their data tools, sources and challenges
+documented in [docs/modules/](docs/modules/):
+[`mcp-inep`](docs/modules/inep.md) (education — Censo Escolar, Ideb, Saeb,
+Enem), [`mcp-dados-gov-br`](docs/modules/dados-gov-br.md) (dados.gov.br
+catalog), [`mcp-bcb`](docs/modules/bcb.md) (Banco Central indicators),
+[`mcp-rio`](docs/modules/rio.md) (Rio de Janeiro open data),
+[`mcp-saude`](docs/modules/saude.md) (DataSUS health data),
+[`mcp-transparencia`](docs/modules/transparencia.md) (Portal da
+Transparência) and [`mcp-tesouro`](docs/modules/tesouro.md) (Tesouro
+Nacional / SICONFI). `mcp-sidra` (a dedicated SIDRA module, split out of
+`mcp-ibge`) remains a documentation-only proposal — see
+[docs/modules/sidra.md](docs/modules/sidra.md). See
+[docs/roadmap.md](docs/roadmap.md) for details — the workspace is
+structured so each scaffold's data tools can be implemented independently,
+without touching other modules.
 
 ## Quick start
 
@@ -273,19 +286,27 @@ roadmap of the IBGE module, see
 mcp-data-br/
 ├── pyproject.toml          # uv workspace root (virtual project)
 ├── packages/
-│   ├── mcp_ibge/             # mcp-ibge: IBGE Localidades + Agregados/SIDRA
+│   ├── mcp_ibge/             # mcp-ibge: IBGE Localidades + Agregados/SIDRA (stable)
 │   │   ├── src/mcp_ibge/
 │   │   ├── tests/
 │   │   ├── docs/
 │   │   └── README.md
-│   └── mcp_inep/             # mcp-inep: INEP education data (planning, no tools yet)
-│       ├── src/mcp_inep/
-│       ├── tests/
-│       └── README.md
+│   ├── mcp_inep/             # mcp-inep: INEP education data (scaffold, only `status`)
+│   ├── mcp_dados_gov_br/     # mcp-dados-gov-br: dados.gov.br catalog (scaffold, only `status`)
+│   ├── mcp_bcb/              # mcp-bcb: Banco Central indicators (scaffold, only `status`)
+│   ├── mcp_rio/              # mcp-rio: Data.Rio open data (scaffold, only `status`)
+│   ├── mcp_saude/            # mcp-saude: DataSUS health data (scaffold, only `status`)
+│   ├── mcp_transparencia/    # mcp-transparencia: Portal da Transparência (scaffold, only `status`)
+│   └── mcp_tesouro/          # mcp-tesouro: Tesouro Nacional / SICONFI (scaffold, only `status`)
 ├── docs/                    # Monorepo-level docs (architecture, roadmap, security, data sources)
 ├── examples/                # MCP client configs (Claude Desktop, Cursor, Open WebUI) and prompts
 └── evals/                   # Evaluation datasets and reports (placeholder)
 ```
+
+Every scaffold package (`mcp_inep` and newer) follows the same internal
+layout: `src/<pkg>/{server.py, config.py, schemas/, clients/, services/,
+tools/, utils/}` plus `tests/` — see
+[docs/architecture.md#adding-a-new-module](docs/architecture.md#adding-a-new-module).
 
 See [docs/architecture.md](docs/architecture.md) for how the workspace and
 modules are organized, and [docs/architecture.md#adding-a-new-module](docs/architecture.md#adding-a-new-module)
@@ -312,13 +333,17 @@ development setup (uv workspace, lint/format/test commands) and guidelines.
 **mcp-data-br** é uma coleção de servidores [MCP](https://modelcontextprotocol.io/)
 para dados públicos brasileiros, organizados como um único workspace
 (monorepo) onde cada fonte de dados ganha seu próprio pacote em
-[`packages/`](packages/). A primeira entrega é o **mcp-ibge**, com dados de
+[`packages/`](packages/). A entrega estável é o **mcp-ibge**, com dados de
 localidades e agregados do SIDRA do IBGE — veja
-[packages/mcp_ibge/README.md](packages/mcp_ibge/README.md). O projeto foi
-desenhado para crescer com novos módulos (ex.: SIDRA dedicado, INEP, Banco
-Central, dados.gov.br, Rio de Janeiro) seguindo as mesmas convenções de
-respostas tipadas, rastreáveis e seguras — veja
-[docs/roadmap.md](docs/roadmap.md).
+[packages/mcp_ibge/README.md](packages/mcp_ibge/README.md). Além dele, o
+workspace já inclui sete módulos em estágio de **scaffold** (pacote
+instalável, apenas com a tool `status`, documentação e roadmap prontos):
+**mcp-inep** (educação/INEP), **mcp-dados-gov-br** (catálogo do
+dados.gov.br), **mcp-bcb** (Banco Central), **mcp-rio** (dados abertos do
+Rio de Janeiro), **mcp-saude** (DataSUS), **mcp-transparencia** (Portal da
+Transparência) e **mcp-tesouro** (Tesouro Nacional/SICONFI). Todos seguem as
+mesmas convenções de respostas tipadas, rastreáveis e seguras — veja
+[docs/roadmap.md](docs/roadmap.md) e [docs/modules/](docs/modules/).
 
 ## License
 

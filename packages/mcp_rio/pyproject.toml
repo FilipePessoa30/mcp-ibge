@@ -1,0 +1,81 @@
+[project]
+name = "mcp-rio"
+version = "0.0.1"
+description = "Model Context Protocol server for City of Rio de Janeiro open data (Data.Rio) — municipal datasets and indicators. Planning/scaffold — no tools implemented yet."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "mcp-data-br contributors" }]
+keywords = [
+    "mcp",
+    "model-context-protocol",
+    "rio-de-janeiro",
+    "data-rio",
+    "dados-abertos",
+    "open-data",
+    "municipio",
+    "brasil",
+    "brazil",
+]
+classifiers = [
+    "Development Status :: 1 - Planning",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Internet :: WWW/HTTP :: Indexing/Search",
+]
+dependencies = [
+    "mcp[cli]>=1.6.0",
+    "httpx>=0.27",
+    "pydantic>=2.6",
+    "pydantic-settings>=2.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "respx>=0.21",
+    "ruff>=0.6",
+    "mypy>=1.10",
+]
+
+[project.urls]
+Homepage = "https://github.com/FilipePessoa30/mcp-data-br/tree/main/packages/mcp_rio"
+Repository = "https://github.com/FilipePessoa30/mcp-data-br"
+Issues = "https://github.com/FilipePessoa30/mcp-data-br/issues"
+
+[project.scripts]
+mcp-rio = "mcp_rio.server:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mcp_rio"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF", "PT"]
+ignore = ["B008"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["mcp_rio"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.11"
+files = ["src"]
+ignore_missing_imports = true
+check_untyped_defs = true

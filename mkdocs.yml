@@ -72,6 +72,12 @@ nav:
       - mcp-ibge: modules/ibge.md
       - mcp-sidra (planned): modules/sidra.md
       - mcp-inep (planned): modules/inep.md
+      - mcp-dados-gov-br (planned): modules/dados-gov-br.md
+      - mcp-bcb (planned): modules/bcb.md
+      - mcp-rio (planned): modules/rio.md
+      - mcp-saude (planned): modules/saude.md
+      - mcp-transparencia (planned): modules/transparencia.md
+      - mcp-tesouro (planned): modules/tesouro.md
   - Tools:
       - Localidades: tools/localidades.md
       - Agregados / SIDRA: tools/agregados.md
