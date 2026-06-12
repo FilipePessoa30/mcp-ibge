@@ -71,11 +71,11 @@ and for verifying data before relying on it in reports or decisions.
 
 | Module | Source | Base URL | API docs |
 | --- | --- | --- | --- |
-| [`mcp-ibge`](../packages/mcp_ibge/) | IBGE — Instituto Brasileiro de Geografia e Estatística (Localidades, Agregados/SIDRA) | `https://servicodados.ibge.gov.br/api` | <https://servicodados.ibge.gov.br/api/docs> |
+| [`mcp-ibge`](https://github.com/FilipePessoa30/mcp-ibge/tree/main/packages/mcp_ibge) | IBGE — Instituto Brasileiro de Geografia e Estatística (Localidades, Agregados/SIDRA) | `https://servicodados.ibge.gov.br/api` | <https://servicodados.ibge.gov.br/api/docs> |
 
 Future modules (see [roadmap.md](roadmap.md)) will add their own rows here
 as they're implemented, each with its own base URL allowlist as described in
 [security.md](security.md).
 
 For IBGE-specific endpoint details, see
-[packages/mcp_ibge/docs/data_sources.md](../packages/mcp_ibge/docs/data_sources.md).
+[packages/mcp_ibge/docs/data_sources.md](https://github.com/FilipePessoa30/mcp-ibge/blob/main/packages/mcp_ibge/docs/data_sources.md).

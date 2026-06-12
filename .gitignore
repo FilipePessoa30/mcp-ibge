@@ -23,3 +23,6 @@ htmlcov/
 
 # uv
 uv.lock
+
+# MkDocs
+site/

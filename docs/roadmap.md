@@ -8,13 +8,14 @@ the same conventions (see [architecture.md](architecture.md),
 This page tracks **modules** (new packages). For the detailed,
 version-by-version roadmap of an individual module's tools, see that
 module's own README (e.g.
-[packages/mcp_ibge/README.md](../packages/mcp_ibge/README.md#roadmap)).
+[packages/mcp_ibge/README.md](https://github.com/FilipePessoa30/mcp-ibge/blob/main/packages/mcp_ibge/README.md#roadmap)).
 
 ## Available
 
 - **`mcp-ibge`** — IBGE data: Localidades (regions, states, municipalities,
   districts) and Agregados/SIDRA (statistical aggregates, population
-  estimates). Stable. See [packages/mcp_ibge/](../packages/mcp_ibge/).
+  estimates). Stable. See [Module: mcp-ibge](modules/ibge.md) and
+  [packages/mcp_ibge/](https://github.com/FilipePessoa30/mcp-ibge/tree/main/packages/mcp_ibge).
 
 ## Planned
 
@@ -25,7 +26,7 @@ module's own README (e.g.
   more specialized tooling. No breaking changes are planned for existing
   `mcp-ibge` tools as part of this — if/when a split happens, it will be
   additive (new package, with `mcp-ibge` either re-exporting or deprecating
-  gradually).
+  gradually). See [Module: mcp-sidra (planned)](modules/sidra.md).
 - **`mcp-inep`** — education data from INEP (e.g. Censo Escolar, ENEM,
   IDEB), future.
 - **`mcp-dados-gov-br`** — generic access to datasets published on
@@ -43,6 +44,6 @@ touching existing modules.
 
 - **`evals/`** — build out a shared evaluation framework (datasets +
   reports) so tool quality and regressions can be tracked across modules as
-  they're added. See [evals/README.md](../evals/README.md).
+  they're added. See [Evals](evals.md).
 - **`examples/`** — keep client configs (Claude Desktop, Cursor, Open WebUI)
   and prompt recipes up to date as new modules land.

@@ -1,0 +1,92 @@
+site_name: mcp-data-br
+site_description: MCP servers for Brazilian public data (IBGE, SIDRA and more)
+site_url: https://FilipePessoa30.github.io/mcp-ibge/
+repo_name: FilipePessoa30/mcp-ibge
+repo_url: https://github.com/FilipePessoa30/mcp-ibge
+edit_uri: edit/main/docs/
+docs_dir: docs
+
+theme:
+  name: material
+  language: en
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: green
+      accent: green
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: green
+      accent: green
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.indexes
+    - navigation.top
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+    - content.action.edit
+    - toc.follow
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+plugins:
+  - search
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Installation: installation.md
+  - Clients:
+      - Claude Desktop: clients/claude-desktop.md
+      - Cursor: clients/cursor.md
+      - Open WebUI: clients/open-webui.md
+  - Modules:
+      - mcp-ibge: modules/ibge.md
+      - mcp-sidra (planned): modules/sidra.md
+  - Tools:
+      - Localidades: tools/localidades.md
+      - Agregados / SIDRA: tools/agregados.md
+      - Geospatial: tools/geospatial.md
+  - Examples:
+      - Municipal Profile: examples/municipal-profile.md
+      - Compare Municipalities: examples/compare-municipalities.md
+      - Education Activity: examples/education-activity.md
+  - Reference:
+      - Architecture: architecture.md
+      - Data Sources & Response Format: data_sources.md
+      - Evals: evals.md
+      - Security: security.md
+      - Roadmap: roadmap.md
+  - Contributing: contributing.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/FilipePessoa30/mcp-ibge
