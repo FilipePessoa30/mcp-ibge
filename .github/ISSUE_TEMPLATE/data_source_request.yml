@@ -1,0 +1,59 @@
+name: "\U0001F5FA️ New data source / module proposal"
+description: Propose a new official Brazilian public data source to expose as an mcp-data-br module (e.g. INEP, Banco Central, dados.gov.br).
+title: "[data-source]: "
+labels: ["new-module", "data-source", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        See [docs/roadmap.md](https://github.com/FilipePessoa30/mcp-ibge/blob/main/docs/roadmap.md)
+        for already-planned modules (`mcp-sidra`, `mcp-inep`, `mcp-dados-gov-br`,
+        `mcp-bcb`, `mcp-rio`) and
+        [docs/architecture.md](https://github.com/FilipePessoa30/mcp-ibge/blob/main/docs/architecture.md#adding-a-new-module)
+        for the expected package structure and conventions.
+  - type: input
+    id: source_name
+    attributes:
+      label: Data source name
+      placeholder: "INEP - Instituto Nacional de Estudos e Pesquisas Educacionais"
+    validations:
+      required: true
+  - type: input
+    id: api_docs
+    attributes:
+      label: Official API / data documentation URL
+      placeholder: "https://www.gov.br/inep/..."
+    validations:
+      required: true
+  - type: dropdown
+    id: auth
+    attributes:
+      label: Does the API require authentication / API keys?
+      options:
+        - "No - fully public"
+        - "Requires free registration / API key"
+        - "Unsure"
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why is this useful?
+      description: What questions could an agent answer with this data that it can't today?
+    validations:
+      required: true
+  - type: textarea
+    id: example_tools
+    attributes:
+      label: Example tools
+      description: |
+        Sketch 2-5 candidate tool names and parameters, following the
+        `listar_/obter_/buscar_/consultar_` naming convention used by `mcp-ibge`.
+      placeholder: |
+        - listar_escolas(uf, municipio)
+        - obter_indicador_ideb(codigo_escola, ano)
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional context
+      description: Related roadmap entries, overlap with existing modules, licensing notes, etc.

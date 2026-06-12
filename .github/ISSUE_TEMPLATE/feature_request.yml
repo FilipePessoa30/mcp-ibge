@@ -1,0 +1,46 @@
+name: "✨ Feature request"
+description: Suggest a new tool, parameter, or improvement to an existing mcp-data-br module.
+title: "[feature]: "
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before opening a large feature request, check the
+        [Roadmap](https://github.com/FilipePessoa30/mcp-ibge/blob/main/docs/roadmap.md)
+        and existing issues to avoid duplicates. For curated starter ideas,
+        see [docs/community_issues.md](https://github.com/FilipePessoa30/mcp-ibge/blob/main/docs/community_issues.md).
+  - type: input
+    id: module
+    attributes:
+      label: Affected module/package
+      description: e.g. `mcp-ibge`. Leave blank if this is a new module proposal — use the "New data source / module" template instead.
+      placeholder: mcp-ibge
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: What can't you do today that this feature would enable? Who is affected?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: |
+        New tool name(s) and parameters, expected `data`/`metadata` shape,
+        following the response envelope described in
+        [docs/data_sources.md](https://github.com/FilipePessoa30/mcp-ibge/blob/main/docs/data_sources.md)
+        and the `listar_/obter_/buscar_/consultar_` naming convention.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional context

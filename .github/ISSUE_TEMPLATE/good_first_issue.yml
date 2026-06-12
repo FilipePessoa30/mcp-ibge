@@ -1,0 +1,66 @@
+name: "\U0001F331 Good first issue"
+description: Propose or pick up a small, well-scoped task suitable for first-time contributors.
+title: "[good-first-issue]: "
+labels: ["good first issue", "help wanted"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        New here? Check
+        [docs/community_issues.md](https://github.com/FilipePessoa30/mcp-ibge/blob/main/docs/community_issues.md)
+        for a curated list of starter tasks across difficulty levels, and
+        [CONTRIBUTING.md](https://github.com/FilipePessoa30/mcp-ibge/blob/main/CONTRIBUTING.md)
+        for setup instructions.
+
+        If you're picking up an existing entry from that list, link to it
+        below instead of rewriting it from scratch — the title, context,
+        tasks and acceptance criteria are already defined there.
+  - type: input
+    id: title
+    attributes:
+      label: Title
+      description: Short, descriptive title for this task (also used as the issue title).
+    validations:
+      required: true
+  - type: input
+    id: related
+    attributes:
+      label: Related entry in docs/community_issues.md (if any)
+      description: Link to the relevant section, e.g. `docs/community_issues.md#1-melhorar-exemplo-de-readme`.
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Why does this matter? What part of the codebase/docs is affected?
+    validations:
+      required: true
+  - type: textarea
+    id: tasks
+    attributes:
+      label: Tasks
+      description: A checklist of concrete steps to complete this issue.
+      value: |
+        - [ ]
+        - [ ]
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: How do we know this is done? (tests pass, docs updated, lint/format clean, etc.)
+      value: |
+        - [ ]
+        - [ ]
+    validations:
+      required: true
+  - type: dropdown
+    id: difficulty
+    attributes:
+      label: Difficulty
+      options:
+        - "Good first issue (no prior context needed)"
+        - "Intermediate (some familiarity with the codebase)"
+        - "Advanced (design decisions / new module)"
+    validations:
+      required: true

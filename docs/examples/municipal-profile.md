@@ -61,7 +61,7 @@ The agent does **not** need to call these three tools separately — calling
 
 ## Example response
 
-```json title="gerar_perfil_municipal(nome=\"Niterói\", uf=\"RJ\")"
+```json title='gerar_perfil_municipal(nome="Niterói", uf="RJ")'
 {
   "ok": true,
   "data": {

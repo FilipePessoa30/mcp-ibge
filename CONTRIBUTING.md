@@ -3,6 +3,16 @@
 Thanks for your interest in contributing — bug reports, new tools, new
 modules, documentation and tests are all welcome.
 
+## Looking for something to work on?
+
+[docs/community_issues.md](docs/community_issues.md) lists 25 curated
+tasks across three difficulty levels (good first issue, intermediate,
+advanced), each with context, tasks and acceptance criteria. Pick one,
+open an issue using the
+[good first issue template](.github/ISSUE_TEMPLATE/good_first_issue.yml)
+linking back to the relevant entry, and mention in the issue that you'd
+like to work on it before starting.
+
 ## Setup
 
 `mcp-data-br` is a [uv workspace](https://docs.astral.sh/uv/concepts/projects/workspaces/)
@@ -100,10 +110,20 @@ and [docs/roadmap.md](docs/roadmap.md) for the expected structure and
 conventions. Open an issue first to discuss scope before starting a large
 new module.
 
+## Opening a pull request
+
+Please use the [pull request template](.github/pull_request_template.md)
+(filled in automatically) and make sure the checklist items pass before
+requesting review.
+
 ## Reporting bugs / requesting features
 
-Please use the issue templates (Bug report / Feature request) so we have the
-context needed to help.
+Please use the issue templates so we have the context needed to help:
+
+- [Bug report](.github/ISSUE_TEMPLATE/bug_report.yml)
+- [Feature request](.github/ISSUE_TEMPLATE/feature_request.yml)
+- [New data source / module proposal](.github/ISSUE_TEMPLATE/data_source_request.yml)
+- [Good first issue](.github/ISSUE_TEMPLATE/good_first_issue.yml)
 
 ## Code of Conduct
 
