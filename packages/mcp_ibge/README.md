@@ -206,6 +206,61 @@ takes precedence.
 | `MCP_IBGE_TRANSPORT` | `stdio` | MCP transport (`stdio` or `streamable-http`). |
 | `MCP_IBGE_PORT` | `8000` | Port used by the `streamable-http` transport. |
 
+## CLI (`mcp-data-br`)
+
+For quickly trying out a tool without setting up Claude Desktop, Cursor or
+any other MCP client, use the `mcp-data-br` CLI. It calls the exact same
+service layer as the MCP tools and prints the same envelope
+(`{"ok": ..., "data": ..., "metadata": {...}, "warnings": [...], "errors": [...]}`)
+as JSON to stdout.
+
+```bash
+# List the 27 Brazilian states (UFs)
+uv run mcp-data-br ibge estados
+
+# List municipalities in a state
+uv run mcp-data-br ibge municipios --uf RJ
+
+# Resolve a municipality's 7-digit IBGE code
+uv run mcp-data-br ibge codigo-municipio "Niterói" --uf RJ
+
+# Fuzzy-search municipalities by name (optionally narrowed by --uf)
+uv run mcp-data-br ibge buscar-municipio "São José"
+
+# Fetch SIDRA aggregate metadata (variables, periods, territorial levels)
+uv run mcp-data-br sidra metadados --agregado 6579
+
+# Server status: version, registered tools, cache and data sources
+uv run mcp-data-br status
+```
+
+Global options, available on every data command:
+
+| Option | Description |
+| --- | --- |
+| `--pretty` | Pretty-print the JSON output (indented), instead of a single compact line. |
+| `--no-cache` | Bypass the in-memory cache for this call (forces a fresh request to the IBGE API). |
+
+The CLI exits with code `1` when the envelope has `"ok": false` (e.g. an
+ambiguous or not-found municipality), so it can be used in shell scripts:
+
+```bash
+uv run mcp-data-br ibge codigo-municipio "Niterói" --uf RJ --pretty
+```
+
+```json
+{
+  "ok": true,
+  "data": 3303302,
+  "metadata": { "...": "..." },
+  "warnings": [],
+  "errors": []
+}
+```
+
+Run `uv run mcp-data-br --help`, `uv run mcp-data-br ibge --help` or
+`uv run mcp-data-br sidra --help` for the full command/option reference.
+
 ## Available tools
 
 Every tool returns the same envelope, on success or failure:

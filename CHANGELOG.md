@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **CLI `mcp-data-br`** (`cli.py`, new `mcp-data-br` script entry point built
+  with [Typer](https://typer.tiangolo.com/)): lets users try out the
+  IBGE/SIDRA tools from the terminal without configuring Claude Desktop or
+  another MCP client. Commands: `mcp-data-br ibge estados`,
+  `mcp-data-br ibge municipios --uf RJ`,
+  `mcp-data-br ibge codigo-municipio "Niterói" --uf RJ`,
+  `mcp-data-br ibge buscar-municipio "São José"`,
+  `mcp-data-br sidra metadados --agregado 6579` and `mcp-data-br status`.
+  Every command calls the same service layer as the MCP tools and prints the
+  standard `{ok, data, metadata, warnings, errors}` envelope as JSON
+  (`--pretty` for indented output, `--no-cache` to bypass the in-memory
+  cache); exits with code `1` when `ok` is `false`. See
+  [packages/mcp_ibge/README.md#cli-mcp-data-br](packages/mcp_ibge/README.md#cli-mcp-data-br).
+
 - **Geoespacial** (`geo/client.py` + `geo/service.py` + `geo/schemas.py` +
   `tools/geo_tools.py`): 4 new tools return municipality/state boundary
   meshes and bounding boxes as GeoJSON (RFC 7946), from the

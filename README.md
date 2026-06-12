@@ -237,6 +237,21 @@ configs (Claude Desktop, Cursor, Open WebUI) and example prompts, see
 [examples/](examples/) and
 [packages/mcp_ibge/docs/client_setup.md](packages/mcp_ibge/docs/client_setup.md).
 
+### Try it without an MCP client
+
+The `mcp-data-br` CLI calls the same tools directly from the terminal and
+prints JSON — handy for testing without configuring Claude Desktop or
+another MCP client:
+
+```bash
+uv run mcp-data-br ibge estados
+uv run mcp-data-br ibge municipios --uf RJ
+uv run mcp-data-br sidra metadados --agregado 6579 --pretty
+```
+
+See [packages/mcp_ibge/README.md#cli-mcp-data-br](packages/mcp_ibge/README.md#cli-mcp-data-br)
+for the full command reference.
+
 For the full feature list, available tools, configuration options and
 roadmap of the IBGE module, see
 **[packages/mcp_ibge/README.md](packages/mcp_ibge/README.md)**.
