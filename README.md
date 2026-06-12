@@ -170,8 +170,8 @@ under ~30 seconds so it stays small enough for the README to load quickly.
 | Module | Status | Data | Docs |
 | --- | --- | --- | --- |
 | [`mcp-ibge`](packages/mcp_ibge/) | **Stable** | IBGE — geographic locations (regions, states, municipalities, districts) and Agregados/SIDRA statistical aggregates | [README](packages/mcp_ibge/README.md) · [docs](packages/mcp_ibge/docs/) |
+| [`mcp-dados-gov-br`](packages/mcp_dados_gov_br/) | **Beta** | dados.gov.br — Portal Brasileiro de Dados Abertos: dataset, organization, group and tag catalog search (CKAN API) | [README](packages/mcp_dados_gov_br/README.md) · [docs](docs/modules/dados-gov-br.md) |
 | [`mcp-inep`](packages/mcp_inep/) | **Planning** (scaffold, only `status` tool) | INEP — Censo Escolar, Ideb, Saeb, Enem, schools by município, education indicators | [README](packages/mcp_inep/README.md) · [roadmap](docs/modules/inep.md) |
-| [`mcp-dados-gov-br`](packages/mcp_dados_gov_br/) | **Planning** (scaffold, only `status` tool) | dados.gov.br — Portal Brasileiro de Dados Abertos: dataset/organization catalog | [README](packages/mcp_dados_gov_br/README.md) · [roadmap](docs/modules/dados-gov-br.md) |
 | [`mcp-bcb`](packages/mcp_bcb/) | **Planning** (scaffold, only `status` tool) | Banco Central do Brasil — SGS time series, exchange rates (PTAX), Selic | [README](packages/mcp_bcb/README.md) · [roadmap](docs/modules/bcb.md) |
 | [`mcp-rio`](packages/mcp_rio/) | **Planning** (scaffold, only `status` tool) | Data.Rio — open data from the City of Rio de Janeiro | [README](packages/mcp_rio/README.md) · [roadmap](docs/modules/rio.md) |
 | [`mcp-saude`](packages/mcp_saude/) | **Planning** (scaffold, only `status` tool) | DataSUS / Ministério da Saúde — health facilities (CNES) and indicators by município/UF | [README](packages/mcp_saude/README.md) · [roadmap](docs/modules/saude.md) |
@@ -191,8 +191,9 @@ the `mcp-ibge` implementation details:
 3. **No arbitrary URLs** — tools take structured identifiers (codes, names,
    periods), never a full URL.
 4. **Allowlisted domains only** — outbound requests are restricted to a fixed
-   set of official hosts (`https://servicodados.ibge.gov.br`), checked both at
-   startup and before every request.
+   set of official hosts per module (e.g. `https://servicodados.ibge.gov.br`
+   for `mcp-ibge`, `https://dados.gov.br` for `mcp-dados-gov-br`), checked
+   both at startup and before every request.
 5. **Timeouts** on every outbound HTTP call.
 6. **Response size limits** — oversized responses are aborted, not buffered.
 7. **Input validation** before any network call — invalid parameters return a
@@ -200,8 +201,10 @@ the `mcp-ibge` implementation details:
 8. **No stack traces in errors** — the MCP client gets a short error message;
    full tracebacks stay in `stderr` logs.
 9. **stdio-safe logging** — all logs go to `stderr`, never `stdout`.
-10. **No API keys** — every data source is free and unauthenticated; there are
-    no secrets to configure or leak.
+10. **No required API keys** — every data source works unauthenticated for
+    read access. `mcp-dados-gov-br` accepts an *optional* consumer token
+    (`DADOS_GOV_BR_API_TOKEN`) for the few resources that require it; if
+    unset, those tools return a clear error instead of failing silently.
 
 This is implemented by a small, centralized
 [`mcp_ibge.security`](packages/mcp_ibge/src/mcp_ibge/security.py) module
@@ -212,15 +215,14 @@ modules follow the same pattern.
 
 ## Planned modules
 
-mcp-data-br is designed to grow. Beyond `mcp-ibge` (stable), seven modules
-already exist as **scaffolds** — installable packages exposing only the
-shared `status` tool, with their data tools, sources and challenges
-documented in [docs/modules/](docs/modules/):
-[`mcp-inep`](docs/modules/inep.md) (education — Censo Escolar, Ideb, Saeb,
-Enem), [`mcp-dados-gov-br`](docs/modules/dados-gov-br.md) (dados.gov.br
-catalog), [`mcp-bcb`](docs/modules/bcb.md) (Banco Central indicators),
-[`mcp-rio`](docs/modules/rio.md) (Rio de Janeiro open data),
-[`mcp-saude`](docs/modules/saude.md) (DataSUS health data),
+mcp-data-br is designed to grow. Beyond `mcp-ibge` (stable) and
+`mcp-dados-gov-br` (beta), six modules already exist as **scaffolds** —
+installable packages exposing only the shared `status` tool, with their data
+tools, sources and challenges documented in
+[docs/modules/](docs/modules/): [`mcp-inep`](docs/modules/inep.md) (education
+— Censo Escolar, Ideb, Saeb, Enem), [`mcp-bcb`](docs/modules/bcb.md) (Banco
+Central indicators), [`mcp-rio`](docs/modules/rio.md) (Rio de Janeiro open
+data), [`mcp-saude`](docs/modules/saude.md) (DataSUS health data),
 [`mcp-transparencia`](docs/modules/transparencia.md) (Portal da
 Transparência) and [`mcp-tesouro`](docs/modules/tesouro.md) (Tesouro
 Nacional / SICONFI). `mcp-sidra` (a dedicated SIDRA module, split out of
@@ -291,8 +293,8 @@ mcp-data-br/
 │   │   ├── tests/
 │   │   ├── docs/
 │   │   └── README.md
+│   ├── mcp_dados_gov_br/     # mcp-dados-gov-br: dados.gov.br catalog (beta)
 │   ├── mcp_inep/             # mcp-inep: INEP education data (scaffold, only `status`)
-│   ├── mcp_dados_gov_br/     # mcp-dados-gov-br: dados.gov.br catalog (scaffold, only `status`)
 │   ├── mcp_bcb/              # mcp-bcb: Banco Central indicators (scaffold, only `status`)
 │   ├── mcp_rio/              # mcp-rio: Data.Rio open data (scaffold, only `status`)
 │   ├── mcp_saude/            # mcp-saude: DataSUS health data (scaffold, only `status`)
@@ -335,15 +337,18 @@ para dados públicos brasileiros, organizados como um único workspace
 (monorepo) onde cada fonte de dados ganha seu próprio pacote em
 [`packages/`](packages/). A entrega estável é o **mcp-ibge**, com dados de
 localidades e agregados do SIDRA do IBGE — veja
-[packages/mcp_ibge/README.md](packages/mcp_ibge/README.md). Além dele, o
-workspace já inclui sete módulos em estágio de **scaffold** (pacote
-instalável, apenas com a tool `status`, documentação e roadmap prontos):
-**mcp-inep** (educação/INEP), **mcp-dados-gov-br** (catálogo do
-dados.gov.br), **mcp-bcb** (Banco Central), **mcp-rio** (dados abertos do
-Rio de Janeiro), **mcp-saude** (DataSUS), **mcp-transparencia** (Portal da
-Transparência) e **mcp-tesouro** (Tesouro Nacional/SICONFI). Todos seguem as
-mesmas convenções de respostas tipadas, rastreáveis e seguras — veja
-[docs/roadmap.md](docs/roadmap.md) e [docs/modules/](docs/modules/).
+[packages/mcp_ibge/README.md](packages/mcp_ibge/README.md). O
+**mcp-dados-gov-br**, em beta, expõe busca e detalhamento de datasets,
+organizações, grupos e tags do Portal Brasileiro de Dados Abertos (CKAN) —
+veja [packages/mcp_dados_gov_br/README.md](packages/mcp_dados_gov_br/README.md).
+Além desses, o workspace já inclui seis módulos em estágio de **scaffold**
+(pacote instalável, apenas com a tool `status`, documentação e roadmap
+prontos): **mcp-inep** (educação/INEP), **mcp-bcb** (Banco Central),
+**mcp-rio** (dados abertos do Rio de Janeiro), **mcp-saude** (DataSUS),
+**mcp-transparencia** (Portal da Transparência) e **mcp-tesouro** (Tesouro
+Nacional/SICONFI). Todos seguem as mesmas convenções de respostas tipadas,
+rastreáveis e seguras — veja [docs/roadmap.md](docs/roadmap.md) e
+[docs/modules/](docs/modules/).
 
 ## License
 

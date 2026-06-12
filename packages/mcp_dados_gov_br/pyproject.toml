@@ -1,7 +1,7 @@
 [project]
 name = "mcp-dados-gov-br"
-version = "0.0.1"
-description = "Model Context Protocol server for the Brazilian Open Data Portal (dados.gov.br) — dataset catalog search and metadata. Planning/scaffold — no tools implemented yet."
+version = "0.1.0"
+description = "Model Context Protocol server for the Brazilian Open Data Portal (dados.gov.br) — dataset, organization, group and tag catalog search via the CKAN API."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
@@ -18,7 +18,7 @@ keywords = [
     "brazil",
 ]
 classifiers = [
-    "Development Status :: 1 - Planning",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",

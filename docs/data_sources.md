@@ -72,6 +72,7 @@ and for verifying data before relying on it in reports or decisions.
 | Module | Source | Base URL | API docs |
 | --- | --- | --- | --- |
 | [`mcp-ibge`](https://github.com/FilipePessoa30/mcp-data-br/tree/main/packages/mcp_ibge) | IBGE — Instituto Brasileiro de Geografia e Estatística (Localidades, Agregados/SIDRA) | `https://servicodados.ibge.gov.br/api` | <https://servicodados.ibge.gov.br/api/docs> |
+| [`mcp-dados-gov-br`](https://github.com/FilipePessoa30/mcp-data-br/tree/main/packages/mcp_dados_gov_br) | dados.gov.br — Portal Brasileiro de Dados Abertos (CKAN catalog) | `https://dados.gov.br/api/3/action` | <https://docs.ckan.org/en/latest/api/> |
 
 Future modules (see [roadmap.md](roadmap.md)) will add their own rows here
 as they're implemented, each with its own base URL allowlist as described in

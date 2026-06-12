@@ -1,10 +1,12 @@
-"""mcp-dados-gov-br: servidor MCP (planejado) para o Portal Brasileiro de Dados Abertos
-(dados.gov.br): busca e metadados de datasets públicos.
+"""mcp-dados-gov-br: servidor MCP para o Portal Brasileiro de Dados Abertos
+(dados.gov.br): busca e detalhamento de datasets, organizações, grupos e tags
+publicados por órgãos públicos brasileiros, via API CKAN.
 
-Status: **scaffold/planejamento** — estrutura de pacote e documentação
-("docs/modules/dados-gov-br.md") existem, e a tool `status` (exigida para todo
-módulo do mcp-data-br) já está registrada, mas nenhuma tool de dados está
-implementada ainda. Veja o roadmap em ``docs/modules/dados-gov-br.md``.
+Expõe 8 tools de dados (`buscar_datasets`, `obter_dataset`,
+`listar_recursos_dataset`, `buscar_organizacoes`, `obter_organizacao`,
+`listar_grupos`, `buscar_tags`, `sugerir_datasets_para_pergunta`) além da tool
+`status` exigida para todo módulo do mcp-data-br. Veja
+``docs/modules/dados-gov-br.md``.
 """
 
-__version__ = "0.0.1"
+__version__ = "0.1.0"

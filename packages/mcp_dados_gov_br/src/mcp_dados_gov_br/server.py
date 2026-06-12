@@ -1,11 +1,8 @@
-"""Servidor MCP `mcp-dados-gov-br` (scaffold/planejamento).
+"""Servidor MCP `mcp-dados-gov-br`.
 
-Status: apenas a tool `status` está registrada — este módulo existe para que
-o pacote seja executável e testável desde já (`uv run mcp-dados-gov-br`), servindo de
-base para as tools descritas em `docs/modules/dados-gov-br.md`.
-
-Quando as primeiras tools de dados forem implementadas, siga o padrão do
-`mcp-ibge` (`tools.<dominio>_tools.register_<dominio>_tools(mcp)`).
+Expõe ferramentas de busca e detalhamento de datasets, organizações, grupos e
+tags do Portal Brasileiro de Dados Abertos (dados.gov.br, API CKAN), seguindo
+o padrão do `mcp-ibge` (`tools.<dominio>_tools.register_<dominio>_tools(mcp)`).
 
 Execução:
     python -m mcp_dados_gov_br.server
@@ -28,6 +25,9 @@ from typing import Literal, cast
 from mcp.server.fastmcp import FastMCP
 
 from .config import get_settings
+from .tools.catalogo_tools import register_catalogo_tools
+from .tools.dataset_tools import register_dataset_tools
+from .tools.organizacao_tools import register_organizacao_tools
 from .tools.status_tools import register_status_tools
 
 _settings = get_settings()
@@ -35,16 +35,24 @@ _settings = get_settings()
 mcp = FastMCP(
     "mcp-dados-gov-br",
     instructions=(
-        "Servidor MCP (em planejamento) para o Portal Brasileiro de Dados Abertos (dados.gov.br): "
-        "busca de datasets, metadados e recursos publicados por órgãos públicos brasileiros. "
-        "Nenhuma tool de dados está disponível nesta versão (apenas `status`) — veja "
-        "docs/modules/dados-gov-br.md para o roadmap."
+        "Servidor MCP para o Portal Brasileiro de Dados Abertos (dados.gov.br, API "
+        "CKAN): busca e detalhamento de datasets, organizações, grupos temáticos e "
+        "tags publicados por órgãos públicos brasileiros. Use `buscar_datasets` ou "
+        "`sugerir_datasets_para_pergunta` para descobrir datasets, `obter_dataset` "
+        "e `listar_recursos_dataset` para detalhes e arquivos/links de um dataset "
+        "específico, e `buscar_organizacoes`/`obter_organizacao` para informações "
+        "sobre os órgãos publicadores. Algumas operações podem exigir um token de "
+        "consumidor (`DADOS_GOV_BR_API_TOKEN`) — se não configurado, a tool retorna "
+        "um erro explicando como configurá-lo."
     ),
     host=_settings.host,
     port=_settings.port,
 )
 
 register_status_tools(mcp)
+register_dataset_tools(mcp)
+register_organizacao_tools(mcp)
+register_catalogo_tools(mcp)
 
 
 def main() -> None:
@@ -55,7 +63,7 @@ def main() -> None:
         stream=sys.stderr,
     )
     logging.getLogger(__name__).info(
-        "Iniciando mcp-dados-gov-br (transporte=%s, scaffold)",
+        "Iniciando mcp-dados-gov-br (transporte=%s)",
         _settings.transport,
     )
     transport = cast("Literal['stdio', 'sse', 'streamable-http']", _settings.transport)

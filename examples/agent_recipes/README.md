@@ -1,8 +1,9 @@
 # Receitas de agentes (agent recipes)
 
 Receitas prontas — prompt + tools esperadas + exemplo de resposta — para usar
-o **mcp-data-br** (hoje, o módulo `mcp-ibge`) com um agente de IA (Claude
-Desktop, Cursor, etc.). Cada receita é uma pasta com 4 arquivos:
+os módulos do **mcp-data-br** (`mcp-ibge`, `mcp-dados-gov-br`, ...) com um
+agente de IA (Claude Desktop, Cursor, etc.). Cada receita é uma pasta com 4
+arquivos:
 
 - `README.md` — objetivo, fluxo de tools, limitações e como verificar a
   fonte.
@@ -14,13 +15,14 @@ Desktop, Cursor, etc.). Cada receita é uma pasta com 4 arquivos:
 
 ## Receitas disponíveis
 
-| Receita | Objetivo |
-| --- | --- |
-| [`municipal_profile/`](municipal_profile/) | Gerar o perfil básico de um município brasileiro (identificação, região, população). |
-| [`compare_municipalities/`](compare_municipalities/) | Comparar Rio de Janeiro, Niterói e Maricá com dados oficiais de população. |
-| [`education_activity/`](education_activity/) | Criar uma atividade didática (geografia) usando dados e mapas de municípios. |
-| [`public_policy_brief/`](public_policy_brief/) | Gerar um resumo (briefing) de política pública com dados municipais. |
-| [`sidra_query_discovery/`](sidra_query_discovery/) | Descobrir tabela, variável, período e localidade no SIDRA antes de consultar dados. |
+| Receita | Módulo | Objetivo |
+| --- | --- | --- |
+| [`municipal_profile/`](municipal_profile/) | `mcp-ibge` | Gerar o perfil básico de um município brasileiro (identificação, região, população). |
+| [`compare_municipalities/`](compare_municipalities/) | `mcp-ibge` | Comparar Rio de Janeiro, Niterói e Maricá com dados oficiais de população. |
+| [`education_activity/`](education_activity/) | `mcp-ibge` | Criar uma atividade didática (geografia) usando dados e mapas de municípios. |
+| [`public_policy_brief/`](public_policy_brief/) | `mcp-ibge` | Gerar um resumo (briefing) de política pública com dados municipais. |
+| [`sidra_query_discovery/`](sidra_query_discovery/) | `mcp-ibge` | Descobrir tabela, variável, período e localidade no SIDRA antes de consultar dados. |
+| [`find-public-datasets/`](find-public-datasets/) | `mcp-dados-gov-br` | Encontrar e detalhar datasets, organizações e recursos no Portal Brasileiro de Dados Abertos. |
 
 Para chamadas de tool isoladas (sem o fluxo completo de uma receita), veja
 [`mcp_ibge_queries.md`](mcp_ibge_queries.md).

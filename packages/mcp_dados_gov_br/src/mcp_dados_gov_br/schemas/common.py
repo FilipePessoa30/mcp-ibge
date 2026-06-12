@@ -2,22 +2,24 @@
 `{ok, data, metadata, warnings, errors}`.
 
 Versão simplificada do envelope de `mcp_ibge.schemas.common`, com os campos
-de `metadata` exigidos para o scaffold deste módulo (`source_name`,
-`source_url`, `endpoint`, `params`, `retrieved_at`, `cache_hit`). Campos
-adicionais (`official_source`, `period`, `territorial_level`,
-`license_note`, `version`, ...) podem ser acrescentados quando o módulo
-ganhar tools de dados reais, seguindo o padrão de `mcp_ibge.schemas.common`.
+de `metadata` exigidos para este módulo (`source_name`, `source_url`,
+`endpoint`, `params`, `retrieved_at`, `cache_hit`). Campos adicionais
+(`official_source`, `period`, `territorial_level`, `license_note`,
+`version`, ...) podem ser acrescentados se necessário, seguindo o padrão de
+`mcp_ibge.schemas.common`.
 """
 
 from __future__ import annotations
 
 from collections.abc import Sequence
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel, Field
 
 from ..config import get_settings
+
+T = TypeVar("T")
 
 
 class SourceMetadata(BaseModel):
@@ -53,6 +55,23 @@ class ToolResponse(BaseModel):
     metadata: SourceMetadata
     warnings: list[ToolWarning] = Field(default_factory=list)
     errors: list[ToolError] = Field(default_factory=list)
+
+
+class TypedToolResult(BaseModel, Generic[T]):
+    """Envelope tipado e genérico para dados convertidos em schemas Pydantic.
+
+    Usado internamente pela camada de serviço (`services/catalog_service.py`)
+    para representar resultados já convertidos em schemas tipados (`Dataset`,
+    `Organization`, ...), com avisos/erros não fatais agregados.
+    `tools/run_typed_tool` converte este modelo no envelope público
+    `ToolResponse`.
+    """
+
+    ok: bool
+    data: T
+    metadata: SourceMetadata
+    warnings: list[str] = Field(default_factory=list)
+    errors: list[str] = Field(default_factory=list)
 
 
 def build_metadata(

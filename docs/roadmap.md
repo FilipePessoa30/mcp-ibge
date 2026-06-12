@@ -16,6 +16,12 @@ module's own README (e.g.
   districts) and Agregados/SIDRA (statistical aggregates, population
   estimates). Stable. See [Module: mcp-ibge](modules/ibge.md) and
   [packages/mcp_ibge/](https://github.com/FilipePessoa30/mcp-data-br/tree/main/packages/mcp_ibge).
+- **`mcp-dados-gov-br`** — generic catalog search and detail for datasets,
+  organizations, groups and tags published on
+  [dados.gov.br](https://dados.gov.br/) (CKAN API), plus a keyword-based
+  dataset suggestion tool. See
+  [Module: mcp-dados-gov-br](modules/dados-gov-br.md) and
+  [`packages/mcp_dados_gov_br/`](https://github.com/FilipePessoa30/mcp-data-br/tree/main/packages/mcp_dados_gov_br).
 
 ## Scaffolded (planning)
 
@@ -30,10 +36,6 @@ implementation plan.
   `mcp-ibge` municipality codes for municipal education profiles. See
   [Module: mcp-inep (planned)](modules/inep.md) and
   [`packages/mcp_inep/`](https://github.com/FilipePessoa30/mcp-data-br/tree/main/packages/mcp_inep).
-- **`mcp-dados-gov-br`** — generic access to datasets, organizations and
-  resources published on [dados.gov.br](https://dados.gov.br/) (CKAN API).
-  See [Module: mcp-dados-gov-br (planned)](modules/dados-gov-br.md) and
-  [`packages/mcp_dados_gov_br/`](https://github.com/FilipePessoa30/mcp-data-br/tree/main/packages/mcp_dados_gov_br).
 - **`mcp-bcb`** — economic/financial indicators from the Banco Central do
   Brasil: SGS time series, PTAX exchange rates, Selic. See
   [Module: mcp-bcb (planned)](modules/bcb.md) and

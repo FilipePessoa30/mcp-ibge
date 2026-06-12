@@ -2,8 +2,8 @@
 
 Tool mínima exigida para todo módulo do mcp-data-br (ver
 docs/architecture.md#adding-a-new-module): confirma que o servidor está no ar
-e devolve o envelope padrão `{"ok", "data", "metadata", "warnings", "errors"}`
-mesmo sem nenhuma tool de dados implementada ainda.
+e devolve o envelope padrão `{"ok", "data", "metadata", "warnings", "errors"}`,
+junto com a lista de tools de dados implementadas.
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ def register_status_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def status() -> dict[str, Any]:
-        """Status do servidor: versão e tools de dados disponíveis (nenhuma ainda)."""
+        """Status do servidor: versão e tools de dados disponíveis."""
         metadata = build_metadata(endpoint="status")
         return build_tool_response(
             ok=True,
@@ -29,7 +29,16 @@ def register_status_tools(mcp: FastMCP) -> None:
                 "module": "mcp-dados-gov-br",
                 "version": __version__,
                 "status": "ok",
-                "tools_implemented": [],
+                "tools_implemented": [
+                    "buscar_datasets",
+                    "obter_dataset",
+                    "listar_recursos_dataset",
+                    "buscar_organizacoes",
+                    "obter_organizacao",
+                    "listar_grupos",
+                    "buscar_tags",
+                    "sugerir_datasets_para_pergunta",
+                ],
             },
             metadata=metadata,
         )

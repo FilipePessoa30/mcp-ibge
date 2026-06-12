@@ -27,7 +27,16 @@ async def test_status_tool_returns_envelope() -> None:
     assert structured["ok"] is True
     assert structured["data"]["module"] == "mcp-dados-gov-br"
     assert structured["data"]["status"] == "ok"
-    assert structured["data"]["tools_implemented"] == []
+    assert structured["data"]["tools_implemented"] == [
+        "buscar_datasets",
+        "obter_dataset",
+        "listar_recursos_dataset",
+        "buscar_organizacoes",
+        "obter_organizacao",
+        "listar_grupos",
+        "buscar_tags",
+        "sugerir_datasets_para_pergunta",
+    ]
     assert (
         structured["metadata"]["source_name"]
         == "dados.gov.br - Portal Brasileiro de Dados Abertos"
