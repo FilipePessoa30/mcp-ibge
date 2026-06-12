@@ -8,14 +8,14 @@ the same conventions (see [architecture.md](architecture.md),
 This page tracks **modules** (new packages). For the detailed,
 version-by-version roadmap of an individual module's tools, see that
 module's own README (e.g.
-[packages/mcp_ibge/README.md](https://github.com/FilipePessoa30/mcp-ibge/blob/main/packages/mcp_ibge/README.md#roadmap)).
+[packages/mcp_ibge/README.md](https://github.com/FilipePessoa30/mcp-data-br/blob/main/packages/mcp_ibge/README.md#roadmap)).
 
 ## Available
 
 - **`mcp-ibge`** — IBGE data: Localidades (regions, states, municipalities,
   districts) and Agregados/SIDRA (statistical aggregates, population
   estimates). Stable. See [Module: mcp-ibge](modules/ibge.md) and
-  [packages/mcp_ibge/](https://github.com/FilipePessoa30/mcp-ibge/tree/main/packages/mcp_ibge).
+  [packages/mcp_ibge/](https://github.com/FilipePessoa30/mcp-data-br/tree/main/packages/mcp_ibge).
 
 ## Planned
 
@@ -31,7 +31,7 @@ module's own README (e.g.
   Enem, schools by município and education indicators, combined with
   `mcp-ibge` municipality codes for municipal education profiles. A package
   scaffold (no tools yet) already exists at
-  [`packages/mcp_inep/`](https://github.com/FilipePessoa30/mcp-ibge/tree/main/packages/mcp_inep)
+  [`packages/mcp_inep/`](https://github.com/FilipePessoa30/mcp-data-br/tree/main/packages/mcp_inep)
   — see [Module: mcp-inep (planned)](modules/inep.md) for the planned tools,
   data sources, challenges and version-by-version implementation plan.
 - **`mcp-dados-gov-br`** — generic access to datasets published on

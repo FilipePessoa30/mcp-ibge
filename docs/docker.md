@@ -81,7 +81,7 @@ front the server with [`mcpo`](https://github.com/open-webui/mcpo) for
 ## Healthcheck
 
 The image declares a `HEALTHCHECK` that runs
-[`docker/healthcheck.py`](https://github.com/FilipePessoa30/mcp-ibge/blob/main/docker/healthcheck.py):
+[`docker/healthcheck.py`](https://github.com/FilipePessoa30/mcp-data-br/blob/main/docker/healthcheck.py):
 
 - In `stdio` mode, there is no port to probe, so the healthcheck returns
   success immediately.
@@ -98,7 +98,7 @@ docker ps --format '{{.Names}}\t{{.Status}}'
 ## Environment variables
 
 All settings from
-[`packages/mcp_ibge/.env.example`](https://github.com/FilipePessoa30/mcp-ibge/blob/main/packages/mcp_ibge/.env.example)
+[`packages/mcp_ibge/.env.example`](https://github.com/FilipePessoa30/mcp-data-br/blob/main/packages/mcp_ibge/.env.example)
 work inside the container, either via `-e` flags, an `--env-file`, or
 Compose's `environment`/`env_file`. The most relevant ones for Docker:
 
@@ -125,7 +125,7 @@ docker run -i --rm --env-file .env mcp-ibge
 
 ## Trying the CLI in the container
 
-The [`mcp-data-br` CLI](https://github.com/FilipePessoa30/mcp-ibge/blob/main/packages/mcp_ibge/README.md#cli-mcp-data-br)
+The [`mcp-data-br` CLI](https://github.com/FilipePessoa30/mcp-data-br/blob/main/packages/mcp_ibge/README.md#cli-mcp-data-br)
 is also installed in the image. Override the entrypoint to run a one-off
 command instead of the server:
 

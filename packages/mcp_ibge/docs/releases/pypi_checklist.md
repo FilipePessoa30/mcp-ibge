@@ -14,7 +14,7 @@ seguir para o próximo.
 - [ ] Versão em `pyproject.toml` (`[project] version`) é `0.1.0`.
 - [ ] `CHANGELOG.md` tem uma seção `[0.1.0]` com a data de release correta.
 - [ ] `README.md` sem placeholders (`your-username` etc.) e com os links do
-      repositório corretos (`https://github.com/FilipePessoa30/mcp-ibge`).
+      repositório corretos (`https://github.com/FilipePessoa30/mcp-data-br`).
 - [ ] `LICENSE` (MIT) presente na raiz e referenciado em `pyproject.toml`
       (`license = { text = "MIT" }`).
 - [ ] `pyproject.toml` → `[project.urls]` aponta para o repositório real

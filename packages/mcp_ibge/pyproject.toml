@@ -1,7 +1,7 @@
 [project]
 name = "mcp-ibge"
-version = "0.2.0"
-description = "Servidor MCP (Model Context Protocol) para consultar dados públicos e oficiais do IBGE: localidades, agregados/SIDRA e indicadores de população."
+version = "0.3.0"
+description = "MCP server for official Brazilian IBGE public data: locations, SIDRA statistical aggregates, population estimates and geospatial boundaries, with typed and source-cited responses."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
@@ -14,16 +14,21 @@ keywords = [
     "dados-abertos",
     "open-data",
     "brasil",
+    "brazil",
+    "geospatial",
 ]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Internet :: WWW/HTTP :: Indexing/Search",
+    "Typing :: Typed",
 ]
 dependencies = [
     "mcp[cli]>=1.6.0",
@@ -43,9 +48,11 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/FilipePessoa30/mcp-ibge/tree/main/packages/mcp_ibge"
-Repository = "https://github.com/FilipePessoa30/mcp-ibge"
-Issues = "https://github.com/FilipePessoa30/mcp-ibge/issues"
+Homepage = "https://github.com/FilipePessoa30/mcp-data-br/tree/main/packages/mcp_ibge"
+Documentation = "https://FilipePessoa30.github.io/mcp-data-br/"
+Repository = "https://github.com/FilipePessoa30/mcp-data-br"
+Issues = "https://github.com/FilipePessoa30/mcp-data-br/issues"
+Changelog = "https://github.com/FilipePessoa30/mcp-data-br/blob/main/CHANGELOG.md"
 
 [project.scripts]
 mcp-ibge = "mcp_ibge.server:main"

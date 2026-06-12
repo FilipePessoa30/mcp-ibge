@@ -331,4 +331,4 @@ for each given municipality.
 ---
 
 For the full reference, see
-[`packages/mcp_ibge/docs/tools.md`](https://github.com/FilipePessoa30/mcp-ibge/blob/main/packages/mcp_ibge/docs/tools.md#geoespacial).
+[`packages/mcp_ibge/docs/tools.md`](https://github.com/FilipePessoa30/mcp-data-br/blob/main/packages/mcp_ibge/docs/tools.md#geoespacial).

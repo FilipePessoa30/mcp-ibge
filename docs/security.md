@@ -5,7 +5,7 @@
 secrets, API keys, or user data persisted by any module. Every module is
 expected to meet the same baseline; module-specific details live in each
 package's `docs/security.md` (e.g.
-[packages/mcp_ibge/docs/security.md](https://github.com/FilipePessoa30/mcp-ibge/blob/main/packages/mcp_ibge/docs/security.md)).
+[packages/mcp_ibge/docs/security.md](https://github.com/FilipePessoa30/mcp-data-br/blob/main/packages/mcp_ibge/docs/security.md)).
 
 ## Baseline requirements for every module
 
@@ -38,12 +38,12 @@ package's `docs/security.md` (e.g.
 
 In `mcp-ibge`, points 3, 4, 6, 7 and 9 are implemented by a small,
 centralized `mcp_ibge.security` module
-([source](https://github.com/FilipePessoa30/mcp-ibge/blob/main/packages/mcp_ibge/src/mcp_ibge/security.py),
-[tests](https://github.com/FilipePessoa30/mcp-ibge/blob/main/packages/mcp_ibge/tests/test_security.py))
+([source](https://github.com/FilipePessoa30/mcp-data-br/blob/main/packages/mcp_ibge/src/mcp_ibge/security.py),
+[tests](https://github.com/FilipePessoa30/mcp-data-br/blob/main/packages/mcp_ibge/tests/test_security.py))
 that exposes `assert_allowed_url`/`is_allowed_url` (host allowlist check
 before every request), `response_size_guard` (response size limit) and
 `safe_error_response` (stack-trace-free error messages). See
-[packages/mcp_ibge/docs/security.md §12](https://github.com/FilipePessoa30/mcp-ibge/blob/main/packages/mcp_ibge/docs/security.md#12-módulo-central-mcp_ibgesecurity)
+[packages/mcp_ibge/docs/security.md §12](https://github.com/FilipePessoa30/mcp-data-br/blob/main/packages/mcp_ibge/docs/security.md#12-módulo-central-mcp_ibgesecurity)
 for details — future modules should follow the same pattern.
 
 ## Transports

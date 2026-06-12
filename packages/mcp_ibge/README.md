@@ -7,7 +7,7 @@ Brazilian public data.
 
 ![Python](https://img.shields.io/badge/python-3.11%2B-3776AB?logo=python&logoColor=white)
 ![MCP](https://img.shields.io/badge/MCP-Model%20Context%20Protocol-6A5ACD)
-[![CI](https://github.com/FilipePessoa30/mcp-ibge/actions/workflows/ci.yml/badge.svg)](https://github.com/FilipePessoa30/mcp-ibge/actions/workflows/ci.yml)
+[![CI](https://github.com/FilipePessoa30/mcp-data-br/actions/workflows/ci.yml/badge.svg)](https://github.com/FilipePessoa30/mcp-data-br/actions/workflows/ci.yml)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)
 ![pytest](https://img.shields.io/badge/tested%20with-pytest-0A9EDC?logo=pytest&logoColor=white)
@@ -95,7 +95,7 @@ uvx mcp-ibge
 the repository and sync the whole workspace from its root:
 
 ```bash
-git clone https://github.com/FilipePessoa30/mcp-ibge.git mcp-data-br
+git clone https://github.com/FilipePessoa30/mcp-data-br.git mcp-data-br
 cd mcp-data-br
 uv sync --all-extras
 ```
@@ -495,7 +495,7 @@ cite it and the underlying IBGE data:
   title   = {mcp-ibge: Model Context Protocol server for Brazilian IBGE public data},
   author  = {{mcp-data-br contributors}},
   year    = {2026},
-  url     = {https://github.com/FilipePessoa30/mcp-ibge},
+  url     = {https://github.com/FilipePessoa30/mcp-data-br},
   license = {MIT}
 }
 ```

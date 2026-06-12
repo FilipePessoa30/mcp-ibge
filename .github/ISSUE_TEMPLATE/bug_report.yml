@@ -7,7 +7,7 @@ body:
     attributes:
       value: |
         Thanks for taking the time to report a bug! Please fill in as much
-        detail as possible — see [CONTRIBUTING.md](https://github.com/FilipePessoa30/mcp-ibge/blob/main/CONTRIBUTING.md)
+        detail as possible — see [CONTRIBUTING.md](https://github.com/FilipePessoa30/mcp-data-br/blob/main/CONTRIBUTING.md)
         for how to run the project locally.
   - type: input
     id: module

@@ -4,7 +4,7 @@ Thanks for your interest in contributing to `mcp-data-br` — bug reports, new
 tools, new modules, documentation and tests are all welcome.
 
 > 🇧🇷 **Nota**: este conteúdo também está disponível em
-> [CONTRIBUTING.md](https://github.com/FilipePessoa30/mcp-ibge/blob/main/CONTRIBUTING.md),
+> [CONTRIBUTING.md](https://github.com/FilipePessoa30/mcp-data-br/blob/main/CONTRIBUTING.md),
 > na raiz do repositório.
 
 ## Setup
@@ -13,7 +13,7 @@ tools, new modules, documentation and tests are all welcome.
 (monorepo). Requires **Python 3.11+** and [uv](https://docs.astral.sh/uv/).
 
 ```bash
-git clone https://github.com/FilipePessoa30/mcp-ibge.git mcp-data-br
+git clone https://github.com/FilipePessoa30/mcp-data-br.git mcp-data-br
 cd mcp-data-br
 uv sync --all-extras
 ```
@@ -47,7 +47,7 @@ uv run --directory packages/mcp_ibge pytest
 uv run --directory packages/mcp_ibge mypy
 ```
 
-CI ([.github/workflows/ci.yml](https://github.com/FilipePessoa30/mcp-ibge/blob/main/.github/workflows/ci.yml))
+CI ([.github/workflows/ci.yml](https://github.com/FilipePessoa30/mcp-data-br/blob/main/.github/workflows/ci.yml))
 runs `uv sync`, `ruff check`, `ruff format --check` and `pytest` on every
 push/PR; `mypy` runs as an optional, non-blocking step.
 
@@ -78,7 +78,7 @@ mcp-data-br/
 
 See [Architecture](architecture.md) for the workspace-level architecture and
 module conventions, and
-[packages/mcp_ibge/docs/architecture.md](https://github.com/FilipePessoa30/mcp-ibge/blob/main/packages/mcp_ibge/docs/architecture.md)
+[packages/mcp_ibge/docs/architecture.md](https://github.com/FilipePessoa30/mcp-data-br/blob/main/packages/mcp_ibge/docs/architecture.md)
 for a detailed description of `mcp-ibge`'s internal layers and request flow.
 
 ## Guidelines
@@ -88,7 +88,7 @@ for a detailed description of `mcp-ibge`'s internal layers and request flow.
   on success and on failure — see [Data Sources & Response Format](data_sources.md).
 - **Validate inputs**: validate parameters before any network call (see
   [Security](security.md) and
-  [packages/mcp_ibge/docs/security.md](https://github.com/FilipePessoa30/mcp-ibge/blob/main/packages/mcp_ibge/docs/security.md)).
+  [packages/mcp_ibge/docs/security.md](https://github.com/FilipePessoa30/mcp-data-br/blob/main/packages/mcp_ibge/docs/security.md)).
 - **Tests with `respx`**: any new client/endpoint needs mocked HTTP tests —
   no real network access in the test suite.
 - **Tool naming**: tool names follow the existing Portuguese verb prefixes
@@ -112,4 +112,4 @@ context needed to help.
 ## Code of Conduct
 
 This project follows the
-[Code of Conduct](https://github.com/FilipePessoa30/mcp-ibge/blob/main/CODE_OF_CONDUCT.md).
+[Code of Conduct](https://github.com/FilipePessoa30/mcp-data-br/blob/main/CODE_OF_CONDUCT.md).

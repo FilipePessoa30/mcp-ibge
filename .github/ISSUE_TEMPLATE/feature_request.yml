@@ -7,9 +7,9 @@ body:
     attributes:
       value: |
         Before opening a large feature request, check the
-        [Roadmap](https://github.com/FilipePessoa30/mcp-ibge/blob/main/docs/roadmap.md)
+        [Roadmap](https://github.com/FilipePessoa30/mcp-data-br/blob/main/docs/roadmap.md)
         and existing issues to avoid duplicates. For curated starter ideas,
-        see [docs/community_issues.md](https://github.com/FilipePessoa30/mcp-ibge/blob/main/docs/community_issues.md).
+        see [docs/community_issues.md](https://github.com/FilipePessoa30/mcp-data-br/blob/main/docs/community_issues.md).
   - type: input
     id: module
     attributes:
@@ -32,7 +32,7 @@ body:
       description: |
         New tool name(s) and parameters, expected `data`/`metadata` shape,
         following the response envelope described in
-        [docs/data_sources.md](https://github.com/FilipePessoa30/mcp-ibge/blob/main/docs/data_sources.md)
+        [docs/data_sources.md](https://github.com/FilipePessoa30/mcp-data-br/blob/main/docs/data_sources.md)
         and the `listar_/obter_/buscar_/consultar_` naming convention.
     validations:
       required: true

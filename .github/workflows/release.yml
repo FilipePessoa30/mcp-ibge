@@ -1,0 +1,77 @@
+name: Release mcp-ibge to PyPI
+
+# Manual release workflow for the `mcp-ibge` package (packages/mcp_ibge).
+# Triggered from the Actions tab — see docs/release.md for the full
+# checklist (version bump, CHANGELOG, tests, lint) that should be done
+# *before* running this.
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Where to publish"
+        required: true
+        type: choice
+        options:
+          - testpypi
+          - pypi
+        default: testpypi
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Build sdist and wheel
+        run: |
+          rm -rf dist
+          uv build --package mcp-ibge
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    # Configure "pypi" / "testpypi" environments in repo settings if you want
+    # required reviewers before a publish runs.
+    environment: ${{ inputs.target }}
+    permissions:
+      # Required for PyPI/TestPyPI Trusted Publishing (OIDC). If you instead
+      # use API tokens via secrets, this permission is unused but harmless.
+      id-token: write
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Publish to TestPyPI
+        if: ${{ inputs.target == 'testpypi' }}
+        env:
+          UV_PUBLISH_TOKEN: ${{ secrets.TEST_PYPI_API_TOKEN }}
+        run: uv publish --publish-url https://test.pypi.org/legacy/ dist/*
+
+      - name: Publish to PyPI
+        if: ${{ inputs.target == 'pypi' }}
+        env:
+          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+        run: uv publish dist/*

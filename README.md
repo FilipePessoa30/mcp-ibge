@@ -6,7 +6,7 @@ from AI agents.**
 
 ![Python](https://img.shields.io/badge/python-3.11%2B-3776AB?logo=python&logoColor=white)
 ![MCP](https://img.shields.io/badge/MCP-Model%20Context%20Protocol-6A5ACD)
-[![CI](https://github.com/FilipePessoa30/mcp-ibge/actions/workflows/ci.yml/badge.svg)](https://github.com/FilipePessoa30/mcp-ibge/actions/workflows/ci.yml)
+[![CI](https://github.com/FilipePessoa30/mcp-data-br/actions/workflows/ci.yml/badge.svg)](https://github.com/FilipePessoa30/mcp-data-br/actions/workflows/ci.yml)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)
 ![pytest](https://img.shields.io/badge/tested%20with-pytest-0A9EDC?logo=pytest&logoColor=white)
@@ -116,7 +116,7 @@ In other words:
 ### Try it yourself
 
 ```bash
-git clone https://github.com/FilipePessoa30/mcp-ibge.git mcp-data-br
+git clone https://github.com/FilipePessoa30/mcp-data-br.git mcp-data-br
 cd mcp-data-br
 uv sync --all-extras
 uv run mcp-ibge
@@ -222,7 +222,7 @@ without touching existing ones.
 Requires **Python 3.11+** and [uv](https://docs.astral.sh/uv/).
 
 ```bash
-git clone https://github.com/FilipePessoa30/mcp-ibge.git mcp-data-br
+git clone https://github.com/FilipePessoa30/mcp-data-br.git mcp-data-br
 cd mcp-data-br
 uv sync --all-extras
 uv run mcp-ibge

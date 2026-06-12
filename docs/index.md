@@ -37,7 +37,7 @@ conventions:
 
 The project is organized as a single **uv workspace (monorepo)**: each data
 source gets its own installable package under
-[`packages/`](https://github.com/FilipePessoa30/mcp-ibge/tree/main/packages),
+[`packages/`](https://github.com/FilipePessoa30/mcp-data-br/tree/main/packages),
 all sharing the same conventions and tooling.
 
 ## 30-second demo
@@ -95,7 +95,7 @@ yourself.
 
 | Module | Status | Data source | Docs |
 | --- | --- | --- | --- |
-| [`mcp-ibge`](https://github.com/FilipePessoa30/mcp-ibge/tree/main/packages/mcp_ibge) | Stable | IBGE (Localidades, Agregados/SIDRA, geospatial meshes) | [Module docs](modules/ibge.md) |
+| [`mcp-ibge`](https://github.com/FilipePessoa30/mcp-data-br/tree/main/packages/mcp_ibge) | Stable | IBGE (Localidades, Agregados/SIDRA, geospatial meshes) | [Module docs](modules/ibge.md) |
 
 See [Roadmap](roadmap.md) for planned modules (`mcp-sidra`, `mcp-inep`,
 `mcp-dados-gov-br`, `mcp-bcb`, `mcp-rio`).

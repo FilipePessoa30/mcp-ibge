@@ -55,7 +55,7 @@ script (or the module directly):
 ```
 
 A ready-to-use file with all three variants is available at
-[`examples/cursor/mcp_ibge.json`](https://github.com/FilipePessoa30/mcp-ibge/blob/main/examples/cursor/mcp_ibge.json).
+[`examples/cursor/mcp_ibge.json`](https://github.com/FilipePessoa30/mcp-data-br/blob/main/examples/cursor/mcp_ibge.json).
 
 ## Reload the window
 

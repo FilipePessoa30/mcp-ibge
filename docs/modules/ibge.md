@@ -90,6 +90,6 @@ Dados** API:
 
 ## Roadmap
 
-See [packages/mcp_ibge/README.md#roadmap](https://github.com/FilipePessoa30/mcp-ibge/blob/main/packages/mcp_ibge/README.md#roadmap)
+See [packages/mcp_ibge/README.md#roadmap](https://github.com/FilipePessoa30/mcp-data-br/blob/main/packages/mcp_ibge/README.md#roadmap)
 for the module's version-by-version roadmap, and [Roadmap](../roadmap.md)
 for the broader, multi-module roadmap.

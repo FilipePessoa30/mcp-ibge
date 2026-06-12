@@ -39,8 +39,8 @@ docs = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/FilipePessoa30/mcp-ibge"
-Issues = "https://github.com/FilipePessoa30/mcp-ibge/issues"
+Homepage = "https://github.com/FilipePessoa30/mcp-data-br"
+Issues = "https://github.com/FilipePessoa30/mcp-data-br/issues"
 
 [tool.uv]
 package = false

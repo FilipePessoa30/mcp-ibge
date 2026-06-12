@@ -1,6 +1,6 @@
 # Evals
 
-The [`evals/`](https://github.com/FilipePessoa30/mcp-ibge/tree/main/evals)
+The [`evals/`](https://github.com/FilipePessoa30/mcp-data-br/tree/main/evals)
 directory contains an evaluation framework to check whether an agent (e.g. an
 LLM with access to `mcp-data-br` tools) uses the MCP tools exposed by
 `mcp_ibge` correctly — picking the right tool, reading the right response
@@ -13,7 +13,7 @@ responsibility of whoever generates the `--results` file — the runner only
 compares that file against the datasets.
 
 > 🇧🇷 **Nota**: o framework e os datasets estão documentados em português em
-> [`evals/README.md`](https://github.com/FilipePessoa30/mcp-ibge/blob/main/evals/README.md);
+> [`evals/README.md`](https://github.com/FilipePessoa30/mcp-data-br/blob/main/evals/README.md);
 > esta página é um resumo em inglês.
 
 ## Layout
@@ -124,7 +124,7 @@ Dataset cases with no corresponding entry in the results file are treated as
 this penalizes coverage gaps in the agent.
 
 See
-[`example_results.json`](https://github.com/FilipePessoa30/mcp-ibge/blob/main/evals/example_results.json)
+[`example_results.json`](https://github.com/FilipePessoa30/mcp-data-br/blob/main/evals/example_results.json)
 for a full example (including a case with the wrong tool and three
 not-attempted cases).
 

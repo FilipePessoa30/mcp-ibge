@@ -6,10 +6,10 @@ body:
   - type: markdown
     attributes:
       value: |
-        See [docs/roadmap.md](https://github.com/FilipePessoa30/mcp-ibge/blob/main/docs/roadmap.md)
+        See [docs/roadmap.md](https://github.com/FilipePessoa30/mcp-data-br/blob/main/docs/roadmap.md)
         for already-planned modules (`mcp-sidra`, `mcp-inep`, `mcp-dados-gov-br`,
         `mcp-bcb`, `mcp-rio`) and
-        [docs/architecture.md](https://github.com/FilipePessoa30/mcp-ibge/blob/main/docs/architecture.md#adding-a-new-module)
+        [docs/architecture.md](https://github.com/FilipePessoa30/mcp-data-br/blob/main/docs/architecture.md#adding-a-new-module)
         for the expected package structure and conventions.
   - type: input
     id: source_name

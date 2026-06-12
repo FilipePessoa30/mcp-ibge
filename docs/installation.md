@@ -31,7 +31,7 @@ Minimal MCP client config once published:
 Clone the repository and sync the whole workspace from its root:
 
 ```bash
-git clone https://github.com/FilipePessoa30/mcp-ibge.git mcp-data-br
+git clone https://github.com/FilipePessoa30/mcp-data-br.git mcp-data-br
 cd mcp-data-br
 uv sync --all-extras
 ```
@@ -84,7 +84,7 @@ MCP_IBGE_TRANSPORT=streamable-http MCP_IBGE_PORT=8000 uv run mcp-ibge
 
 All settings have sensible defaults and can be overridden via environment
 variables (prefix `MCP_IBGE_`) or a `.env` file — copy
-[`packages/mcp_ibge/.env.example`](https://github.com/FilipePessoa30/mcp-ibge/blob/main/packages/mcp_ibge/.env.example)
+[`packages/mcp_ibge/.env.example`](https://github.com/FilipePessoa30/mcp-data-br/blob/main/packages/mcp_ibge/.env.example)
 to `.env` and adjust as needed.
 
 Cache and log level can also be set via shared `MCP_DATA_BR_*` names — useful

@@ -46,9 +46,9 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/FilipePessoa30/mcp-ibge/tree/main/packages/mcp_inep"
-Repository = "https://github.com/FilipePessoa30/mcp-ibge"
-Issues = "https://github.com/FilipePessoa30/mcp-ibge/issues"
+Homepage = "https://github.com/FilipePessoa30/mcp-data-br/tree/main/packages/mcp_inep"
+Repository = "https://github.com/FilipePessoa30/mcp-data-br"
+Issues = "https://github.com/FilipePessoa30/mcp-data-br/issues"
 
 [project.scripts]
 mcp-inep = "mcp_inep.server:main"

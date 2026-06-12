@@ -1,8 +1,8 @@
 # Module: mcp-inep (planned)
 
 `mcp-inep` is a **planned** future module — package scaffold exists at
-[`packages/mcp_inep/`](https://github.com/FilipePessoa30/mcp-ibge/tree/main/packages/mcp_inep)
-(see its [README](https://github.com/FilipePessoa30/mcp-ibge/blob/main/packages/mcp_inep/README.md)),
+[`packages/mcp_inep/`](https://github.com/FilipePessoa30/mcp-data-br/tree/main/packages/mcp_inep)
+(see its [README](https://github.com/FilipePessoa30/mcp-data-br/blob/main/packages/mcp_inep/README.md)),
 but **no tool is implemented yet**. This page is the technical roadmap: what
 data it will expose, which tools are planned, the challenges that make INEP
 data harder to serve than IBGE's, the limits of what's realistically
@@ -137,7 +137,7 @@ scope than `mcp-ibge`:
 - **Refresh cadence tied to INEP's publication schedule**, not real-time —
   `metadata.period` and `warnings` will make this explicit (mirroring how
   `mcp-ibge`'s `consultar_populacao_municipio` documents its dependency on a
-  fixed SIDRA aggregate, see [mcp-ibge roadmap](https://github.com/FilipePessoa30/mcp-ibge/blob/main/packages/mcp_ibge/README.md#roadmap)).
+  fixed SIDRA aggregate, see [mcp-ibge roadmap](https://github.com/FilipePessoa30/mcp-data-br/blob/main/packages/mcp_ibge/README.md#roadmap)).
 - **Enem and Saeb indicators are later-stage.** They depend on the same
   derived-dataset approach as Censo Escolar/Ideb but with larger source
   files, so they're scheduled after the município-level Ideb/Censo Escolar

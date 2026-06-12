@@ -3,14 +3,14 @@
 A curated list of 25 starter tasks for `mcp-data-br`, split into three
 difficulty tiers. Each entry has enough context to open as a GitHub issue
 directly (see the
-[good first issue template](https://github.com/FilipePessoa30/mcp-ibge/blob/main/.github/ISSUE_TEMPLATE/good_first_issue.yml)).
+[good first issue template](https://github.com/FilipePessoa30/mcp-data-br/blob/main/.github/ISSUE_TEMPLATE/good_first_issue.yml)).
 
 If you'd like to work on one of these:
 
 1. Open an issue using the **good first issue** template, link back to the
    relevant entry below (e.g. `docs/community_issues.md#1-improve-the-readme-quick-start-example`),
    and mention that you're picking it up.
-2. Read [CONTRIBUTING.md](https://github.com/FilipePessoa30/mcp-ibge/blob/main/CONTRIBUTING.md)
+2. Read [CONTRIBUTING.md](https://github.com/FilipePessoa30/mcp-data-br/blob/main/CONTRIBUTING.md)
    for setup and the checks that run before a PR.
 3. Keep the [response envelope](data_sources.md) and Portuguese tool-naming
    convention (`listar_`, `obter_`, `buscar_`, `consultar_`) in mind for any

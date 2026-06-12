@@ -44,7 +44,7 @@ with its own `pyproject.toml`, version, and PyPI entry.
 
 Every module under `packages/` is a self-contained MCP server. `mcp_ibge` is
 the reference implementation — see
-[packages/mcp_ibge/docs/architecture.md](https://github.com/FilipePessoa30/mcp-ibge/blob/main/packages/mcp_ibge/docs/architecture.md)
+[packages/mcp_ibge/docs/architecture.md](https://github.com/FilipePessoa30/mcp-data-br/blob/main/packages/mcp_ibge/docs/architecture.md)
 for its internal layering (`clients/` → `services/` → `tools/`, schemas,
 utils). New modules (e.g. a future `mcp-sidra` or `mcp-inep`) are expected to
 follow the same internal shape:

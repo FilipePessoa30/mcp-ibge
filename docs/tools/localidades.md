@@ -308,4 +308,4 @@ listar_distritos(codigo_municipio=3304557)
 
 For the full reference (including parameter validation details and every
 error message), see
-[`packages/mcp_ibge/docs/tools.md`](https://github.com/FilipePessoa30/mcp-ibge/blob/main/packages/mcp_ibge/docs/tools.md#localidades).
+[`packages/mcp_ibge/docs/tools.md`](https://github.com/FilipePessoa30/mcp-data-br/blob/main/packages/mcp_ibge/docs/tools.md#localidades).

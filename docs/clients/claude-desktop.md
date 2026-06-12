@@ -79,7 +79,7 @@ workspace member). On Windows, use a path with forward slashes or doubled
 backslashes, e.g. `"C:/path/to/mcp-data-br"` or `"C:\\path\\to\\mcp-data-br"`.
 
 A ready-to-use file with all three variants is available at
-[`examples/claude_desktop/mcp_ibge.json`](https://github.com/FilipePessoa30/mcp-ibge/blob/main/examples/claude_desktop/mcp_ibge.json).
+[`examples/claude_desktop/mcp_ibge.json`](https://github.com/FilipePessoa30/mcp-data-br/blob/main/examples/claude_desktop/mcp_ibge.json).
 
 ## Restart the client
 
@@ -89,7 +89,7 @@ and its tools become available in conversations.
 ## Test prompts
 
 Use these natural-language prompts to validate the connection — see
-[`examples/agent_recipes/mcp_ibge_queries.md`](https://github.com/FilipePessoa30/mcp-ibge/blob/main/examples/agent_recipes/mcp_ibge_queries.md)
+[`examples/agent_recipes/mcp_ibge_queries.md`](https://github.com/FilipePessoa30/mcp-data-br/blob/main/examples/agent_recipes/mcp_ibge_queries.md)
 for the equivalent tool calls and more examples:
 
 1. "List the Brazilian states."

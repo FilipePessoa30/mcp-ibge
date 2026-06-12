@@ -8,7 +8,7 @@ MCP server into an OpenAPI server.
 ## Option 1: `mcpo` + stdio (recommended)
 
 Run `mcpo` with the bundled
-[`mcpo_config.json`](https://github.com/FilipePessoa30/mcp-ibge/blob/main/examples/open_webui/mcpo_config.json),
+[`mcpo_config.json`](https://github.com/FilipePessoa30/mcp-data-br/blob/main/examples/open_webui/mcpo_config.json),
 which starts `mcp-ibge` over stdio (the default transport):
 
 ```bash

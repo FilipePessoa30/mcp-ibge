@@ -538,4 +538,4 @@ call:
   [Compare Municipalities example](../examples/compare-municipalities.md).
 
 For the full reference (every parameter, error message and edge case), see
-[`packages/mcp_ibge/docs/tools.md`](https://github.com/FilipePessoa30/mcp-ibge/blob/main/packages/mcp_ibge/docs/tools.md).
+[`packages/mcp_ibge/docs/tools.md`](https://github.com/FilipePessoa30/mcp-data-br/blob/main/packages/mcp_ibge/docs/tools.md).

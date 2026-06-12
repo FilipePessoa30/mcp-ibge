@@ -19,7 +19,7 @@ like to work on it before starting.
 (monorepo). Requires **Python 3.11+** and [uv](https://docs.astral.sh/uv/).
 
 ```bash
-git clone https://github.com/FilipePessoa30/mcp-ibge.git mcp-data-br
+git clone https://github.com/FilipePessoa30/mcp-data-br.git mcp-data-br
 cd mcp-data-br
 uv sync --all-extras
 ```

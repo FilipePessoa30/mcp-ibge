@@ -7,9 +7,9 @@ body:
     attributes:
       value: |
         New here? Check
-        [docs/community_issues.md](https://github.com/FilipePessoa30/mcp-ibge/blob/main/docs/community_issues.md)
+        [docs/community_issues.md](https://github.com/FilipePessoa30/mcp-data-br/blob/main/docs/community_issues.md)
         for a curated list of starter tasks across difficulty levels, and
-        [CONTRIBUTING.md](https://github.com/FilipePessoa30/mcp-ibge/blob/main/CONTRIBUTING.md)
+        [CONTRIBUTING.md](https://github.com/FilipePessoa30/mcp-data-br/blob/main/CONTRIBUTING.md)
         for setup instructions.
 
         If you're picking up an existing entry from that list, link to it
