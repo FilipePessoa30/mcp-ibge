@@ -16,12 +16,14 @@ src/mcp_ibge/
 │   ├── common.py          # SourceMetadata, TypedToolResult, ToolResponse, ToolWarning/ToolError, build_metadata/build_tool_response
 │   ├── localidades.py     # Region, State, Municipality, District + conversores *_from_raw
 │   ├── agregados.py       # AgregadoSummary, AgregadoMetadata, AgregadoVariable, AgregadoPeriod, AgregadoQueryResult + conversores *_from_raw
-│   └── perfil.py          # PerfilMunicipal, MunicipioPerfil, IndicadorPerfil + extrair_microrregiao_ou_regiao_intermediaria
+│   ├── perfil.py          # PerfilMunicipal, MunicipioPerfil, IndicadorPerfil + extrair_microrregiao_ou_regiao_intermediaria
+│   └── comparacao.py      # MunicipioConsulta, MunicipioComparado, MunicipioNaoResolvido, ComparacaoMunicipios
 ├── services/             # Regras de negócio: validação, filtros, aliases, indicadores
 │   ├── localidades_service.py  # retorna TypedToolResult[T] (data/metadata/warnings/errors)
 │   ├── agregados_service.py    # idem; constantes AGREGADO_POPULACAO_ESTIMADA / VARIAVEL_POPULACAO_ESTIMADA
 │   ├── sidra_service.py        # SIDRA Query Builder: descoberta, sugestão, validação e execução
-│   └── perfil_service.py       # PerfilService: combina Localidades + população em um PerfilMunicipal
+│   ├── perfil_service.py       # PerfilService: combina Localidades + população em um PerfilMunicipal
+│   └── comparacao_service.py   # ComparacaoService: resolve e compara N municípios (MAX_MUNICIPIOS)
 ├── sidra/                # SIDRA Query Builder: parsing de metadados, validação local e sugestão
 │   ├── metadata_parser.py # parse_agregado_metadata(): JSON de /metadados -> AgregadoMetadataParsed
 │   ├── query_builder.py   # validar_consulta(): valida variaveis/localidades/periodos/classificacao
@@ -31,7 +33,8 @@ src/mcp_ibge/
 │   ├── localidades_tools.py  # register_localidades_tools(mcp)
 │   ├── agregados_tools.py    # register_agregados_tools(mcp)
 │   ├── sidra_tools.py        # register_sidra_tools(mcp): 7 tools do SIDRA Query Builder
-│   └── perfil_tools.py       # register_perfil_tools(mcp): gerar_perfil_municipal
+│   ├── perfil_tools.py       # register_perfil_tools(mcp): gerar_perfil_municipal
+│   └── comparacao_tools.py   # register_comparacao_tools(mcp): comparar_municipios
 └── utils/
     ├── normalization.py   # normalize_text(): busca textual sem acento/caixa
     ├── cache.py            # TTLCache + singleton get_cache()/clear_cache()
@@ -82,6 +85,36 @@ pela API.
 - `data.proximos_indicadores_sugeridos` é uma lista fixa de nomes de
   indicadores ainda não implementados (ex.: PIB, IDH, área territorial) —
   apenas sugestões, nunca dados.
+
+## Comparação de Municípios
+
+`comparacao_service.ComparacaoService` reutiliza os mesmos serviços do
+Perfil Municipal (`LocalidadesService` e
+`AgregadosService.consultar_populacao_municipio`) para resolver e comparar
+até `MAX_MUNICIPIOS` municípios em uma única chamada.
+
+- Cada município (`nome` + `uf`) é resolvido independentemente: um município
+  não encontrado ou ambíguo entra em `municipios_nao_resolvidos` (com o
+  `motivo`) e **não** interrompe a resolução dos demais.
+- `indicadores` é mapeado para os indicadores suportados via
+  `_normalizar_chave_indicador()` (reusa `utils/normalization.normalize_text`).
+  Indicadores não reconhecidos (ex.: `"pib"`) entram em
+  `indicadores_nao_implementados` — apenas o nome, nunca dados — com um
+  `warning`, sem interromper a comparação dos demais indicadores.
+- Por ora, apenas `"populacao_estimada"` é suportado; indicadores cujo valor
+  não pôde ser obtido (falha do SIDRA ou dado ausente/sigiloso) geram um
+  `warning` e simplesmente não aparecem em `indicadores` para aquele
+  município — nunca um valor inventado.
+- `fontes` acumula, sem duplicar, todos os endpoints da API do IBGE usados na
+  comparação (um `/localidades/estados/{uf}/municipios` e um
+  `/localidades/municipios/{id}` por município, mais um
+  `/agregados/6579/.../variaveis/9324` por município/indicador).
+- `limitacoes` combina avisos fixos (alcance dos indicadores, risco do
+  agregado SIDRA 6579 após um novo Censo) com um aviso condicional sobre
+  variação de período entre municípios quando `ano` não é informado.
+- Se `municipios` vier vazio, exceder `MAX_MUNICIPIOS`, ou nenhum município
+  puder ser resolvido, a resposta tem `ok=False` (sem fazer requisições
+  desnecessárias nos dois primeiros casos).
 
 ## Fluxo de uma chamada
 

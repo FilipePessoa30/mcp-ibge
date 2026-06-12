@@ -47,6 +47,10 @@ consultas, sem uso de LLM no servidor)
 
 22. [`gerar_perfil_municipal`](#22-gerar_perfil_municipal)
 
+**Comparação de Municípios** (novo — compara múltiplos municípios)
+
+23. [`comparar_municipios`](#23-comparar_municipios)
+
 ## Formato da resposta
 
 Toda tool retorna um envelope JSON com `metadata` e (`data` ou `error`):
@@ -1842,17 +1846,185 @@ Mais os [erros comuns a todas as tools](#erros-comuns-a-todas-as-tools).
 
 ---
 
+## Comparação de Municípios
+
+### 23. `comparar_municipios`
+
+**Descrição**: compara múltiplos municípios (até `MAX_MUNICIPIOS = 10`) com
+base em indicadores oficiais do IBGE, retornando uma tabela estruturada
+pronta para um agente apresentar. Para cada município informado (`nome` +
+`uf`):
+
+1. Resolve o código IBGE via
+   [`obter_codigo_municipio`](#5-obter_codigo_municipio) (mesma busca
+   *fuzzy*). Municípios não encontrados ou com nome ambíguo na UF informada
+   não interrompem a comparação: aparecem em `municipios_nao_resolvidos`,
+   com o `motivo`.
+2. Obtém os detalhes via
+   [`obter_municipio_por_codigo`](#6-obter_municipio_por_codigo): `nome`,
+   código IBGE, UF e região.
+3. Consulta, para cada município resolvido, os indicadores solicitados que
+   já estão implementados com segurança (por ora, apenas a população
+   residente estimada, via
+   [`consultar_populacao_municipio`](#14-consultar_populacao_municipio)).
+
+Indicadores solicitados em `indicadores` que ainda não são suportados não
+interrompem a comparação: são listados (apenas o nome, nunca dados) em
+`indicadores_nao_implementados`, com um `warning` explicando o motivo. Se
+`indicadores` não for informado, usa os indicadores básicos disponíveis
+(atualmente, `["populacao"]`).
+
+**Parâmetros**:
+
+| Nome | Tipo | Obrigatório | Descrição |
+| --- | --- | --- | --- |
+| `municipios` | `list[{"nome": string, "uf": string}]` | sim | Municípios a comparar (1 a 10), cada um com `nome` e `uf` (sigla ou código IBGE da UF). |
+| `indicadores` | `list[string] \| null` | não | Nomes dos indicadores a comparar (ex.: `["populacao"]`). Sem este parâmetro, usa os indicadores básicos disponíveis. |
+| `ano` | `integer \| null` | não | Ano de referência para os indicadores. Sem este parâmetro, usa o período mais recente disponível no SIDRA para cada município. |
+
+**Exemplo de chamada**:
+
+```python
+comparar_municipios(
+    municipios=[
+        {"nome": "Rio de Janeiro", "uf": "RJ"},
+        {"nome": "Niterói", "uf": "RJ"},
+        {"nome": "Maricá", "uf": "RJ"},
+    ]
+)
+```
+
+**Exemplo de resposta JSON** (sem `ano` informado — período mais recente
+disponível):
+
+```json
+{
+  "ok": true,
+  "data": {
+    "municipios": [
+      {
+        "codigo_ibge": 3304557,
+        "nome": "Rio de Janeiro",
+        "uf_sigla": "RJ",
+        "uf_nome": "Rio de Janeiro",
+        "regiao_nome": "Sudeste",
+        "indicadores": [
+          {
+            "indicador": "populacao_estimada",
+            "valor": 6211423.0,
+            "unidade": "Pessoas",
+            "periodo": "2024",
+            "agregado_id": "6579",
+            "variavel_id": "9324"
+          }
+        ]
+      },
+      {
+        "codigo_ibge": 3303302,
+        "nome": "Niterói",
+        "uf_sigla": "RJ",
+        "uf_nome": "Rio de Janeiro",
+        "regiao_nome": "Sudeste",
+        "indicadores": [
+          {
+            "indicador": "populacao_estimada",
+            "valor": 516981.0,
+            "unidade": "Pessoas",
+            "periodo": "2024",
+            "agregado_id": "6579",
+            "variavel_id": "9324"
+          }
+        ]
+      }
+    ],
+    "municipios_nao_resolvidos": [],
+    "indicadores_consultados": ["populacao_estimada"],
+    "indicadores_nao_implementados": [],
+    "fontes": [
+      "https://servicodados.ibge.gov.br/api/v1/localidades/estados/RJ/municipios",
+      "https://servicodados.ibge.gov.br/api/v1/localidades/municipios/3304557",
+      "https://servicodados.ibge.gov.br/api/v3/agregados/6579/periodos/-1/variaveis/9324",
+      "https://servicodados.ibge.gov.br/api/v1/localidades/municipios/3303302"
+    ],
+    "limitacoes": [
+      "Esta comparação cobre apenas os indicadores listados em `indicadores_consultados`; indicadores em `indicadores_nao_implementados` são apenas sugestões de nomes, não dados.",
+      "O indicador de população usa o agregado SIDRA 6579 (Estimativas de população residente), que pode ser descontinuado ou renomeado pelo IBGE após um novo Censo.",
+      "Sem o parâmetro \"ano\", cada município retorna o período mais recente disponível no SIDRA para esse indicador, que pode diferir entre municípios se algum não tiver dados para o período mais recente."
+    ]
+  },
+  "metadata": {
+    "source_name": "IBGE - Instituto Brasileiro de Geografia e Estatística",
+    "source_url": "https://servicodados.ibge.gov.br/api/v3/agregados/6579/periodos/-1/variaveis/9324",
+    "endpoint": "https://servicodados.ibge.gov.br/api/v3/agregados/6579/periodos/-1/variaveis/9324",
+    "params": {
+      "municipios": [
+        {"nome": "Rio de Janeiro", "uf": "RJ"},
+        {"nome": "Niterói", "uf": "RJ"}
+      ],
+      "indicadores": ["populacao_estimada"],
+      "ano": null
+    },
+    "retrieved_at": "2026-06-11T12:00:00.000000+00:00",
+    "license_note": null
+  },
+  "warnings": [],
+  "errors": []
+}
+```
+
+**Possíveis warnings**:
+
+- `Indicador "<nome>" não está implementado e foi ignorado. Indicadores disponíveis atualmente: "populacao" (população residente estimada).`
+  — emitido para cada item de `indicadores` que não corresponde a um
+  indicador suportado; o nome é incluído em
+  `indicadores_nao_implementados` e a comparação continua com os demais.
+- Avisos de [`obter_codigo_municipio`](#5-obter_codigo_municipio) (ex.: lista
+  de candidatos quando `nome` é ambíguo dentro da `uf`) também são
+  propagados; o município correspondente aparece em
+  `municipios_nao_resolvidos`.
+- `Não foi possível obter a população de "<nome>": <detalhe>` /
+  `População não disponível para "<nome>" (dado ausente ou sigiloso no SIDRA).`
+  — emitidos quando a consulta de população falha ou retorna `null` para um
+  município; nesse caso, o indicador simplesmente não aparece em
+  `indicadores` para esse município.
+
+**Erros comuns**:
+
+| Situação | Mensagem (`error`) |
+| --- | --- |
+| `municipios` vazio | `Informe ao menos um município em "municipios".` |
+| `municipios` com mais de `MAX_MUNICIPIOS` itens | `No máximo 10 municípios por chamada (recebidos N).` |
+| Nenhum dos municípios informados pôde ser resolvido | `Nenhum dos municípios informados pôde ser resolvido.` (mais os `warnings` de cada município, com o motivo individual) |
+
+Mais os [erros comuns a todas as tools](#erros-comuns-a-todas-as-tools).
+
+**Fonte usada**:
+
+- [IBGE Localidades API](https://servicodados.ibge.gov.br/api/docs/localidades)
+  — `GET /localidades/estados/{uf}/municipios` (resolução do código IBGE) e
+  `GET /localidades/municipios/{id}` (identificação, UF, região) para cada
+  município.
+- [IBGE Agregados (SIDRA) API](https://servicodados.ibge.gov.br/api/docs/agregados)
+  — `GET /agregados/6579/periodos/{periodos}/variaveis/9324` (agregado
+  "Estimativas de população residente", [SIDRA tabela 6579](https://sidra.ibge.gov.br/tabela/6579))
+  para cada município, quando o indicador de população é consultado.
+
+---
+
 ## Resources e prompts
 
-Além das 22 tools acima, o servidor expõe:
+Além das 23 tools acima, o servidor expõe:
 
 - **Resource `ibge://status`**: status do servidor — `status`, `server`,
   `version`, lista de `tools` disponíveis e `timestamp` (UTC, ISO 8601). Não
   consulta a API do IBGE.
 - **Prompt `comparar_municipios`**: orienta a comparação de um indicador
-  (padrão: `"população"`) entre municípios informados, guiando o uso de
-  `obter_codigo_municipio`, `listar_agregados`/`obter_metadados_agregado`/
-  `listar_variaveis_agregado`, `consultar_agregado`/
-  `consultar_populacao_municipio`, e exigindo que a resposta final cite
-  fonte, período, unidade territorial e limitações (dados ausentes,
-  estimativas vs. censo, `warnings`).
+  (padrão: `"população"`) entre municípios informados, guiando o uso da tool
+  [`comparar_municipios`](#23-comparar_municipios) (que já resolve os
+  códigos IBGE e consulta os indicadores básicos disponíveis) e, se
+  necessário, das tools de SIDRA (`listar_agregados`/
+  `obter_metadados_agregado`/`listar_variaveis_agregado`/
+  `consultar_agregado`) para indicadores ainda não suportados — exigindo que
+  a resposta final cite fonte, período, unidade e limitações
+  (`municipios_nao_resolvidos`, `indicadores_nao_implementados`,
+  `warnings`).

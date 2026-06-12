@@ -28,7 +28,7 @@ from pydantic import Field
 
 from .config import get_settings
 from .logging_config import configure_logging
-from .tools import agregados_tools, localidades_tools, perfil_tools, sidra_tools
+from .tools import agregados_tools, comparacao_tools, localidades_tools, perfil_tools, sidra_tools
 
 _settings = get_settings()
 
@@ -50,6 +50,7 @@ localidades_tools.register_localidades_tools(mcp)
 agregados_tools.register_agregados_tools(mcp)
 sidra_tools.register_sidra_tools(mcp)
 perfil_tools.register_perfil_tools(mcp)
+comparacao_tools.register_comparacao_tools(mcp)
 
 
 @mcp.resource("ibge://status")
@@ -86,27 +87,28 @@ def comparar_municipios(
         f'Compare o indicador "{indicador}" entre os seguintes municípios: '
         f"{municipios}.\n\n"
         "Siga estes passos:\n"
-        "1. Para cada município, use `obter_codigo_municipio` (nome + UF) "
-        "para obter o código IBGE; se o nome for ambíguo, refine com a UF "
-        "ou peça esclarecimento ao usuário.\n"
-        "2. Use `listar_agregados`, `obter_metadados_agregado` e "
-        "`listar_variaveis_agregado` para localizar o agregado e a variável "
-        "do SIDRA correspondentes ao indicador (para população, prefira "
-        "`consultar_populacao_municipio`).\n"
-        "3. Consulte os dados com `consultar_agregado` (ou "
-        "`consultar_populacao_municipio`), usando o mesmo período para "
-        "todos os municípios sempre que possível.\n"
-        "4. Ao apresentar os resultados, sempre cite:\n"
-        "   - a fonte (`metadata.source_name` e `metadata.source_url`);\n"
-        "   - o ano/período de referência (`periodo` ou "
-        "`metadata.params.periodos`);\n"
-        "   - a unidade territorial (`localidade_nome`/nível territorial) e "
-        "a unidade de medida (`unidade`);\n"
-        "   - limitações: dados ausentes/sigilosos (`valor: null`), "
-        "estimativas vs. censo, `warnings` retornados pelas tools, e "
-        "diferenças de período entre os municípios comparados.\n"
-        "5. Não invente valores: se uma tool retornar erro ou dado ausente, "
-        "informe isso explicitamente em vez de estimar."
+        "1. Monte a lista de municípios no formato "
+        '`[{"nome": ..., "uf": ...}, ...]` e chame a tool '
+        "`comparar_municipios(municipios=..., indicadores=[...], ano=...)`. "
+        "Ela resolve o código IBGE de cada município (reportando "
+        "ambiguidades em `municipios_nao_resolvidos`) e já consulta os "
+        "indicadores básicos disponíveis (atualmente, população residente "
+        "estimada).\n"
+        "2. Se `indicador` não estiver em `data.indicadores_consultados` "
+        "(veja `data.indicadores_nao_implementados` e `warnings`), use "
+        "`listar_agregados`, `obter_metadados_agregado` e "
+        "`listar_variaveis_agregado` para localizar o agregado/variável do "
+        "SIDRA correspondentes e `consultar_agregado` para cada município, "
+        "usando o mesmo período sempre que possível.\n"
+        "3. Ao apresentar os resultados, sempre cite:\n"
+        "   - a fonte (`data.fontes` ou `metadata.source_name`/"
+        "`metadata.source_url`);\n"
+        "   - o ano/período de referência (`periodo` de cada indicador);\n"
+        "   - a unidade de medida (`unidade`);\n"
+        "   - limitações: `data.limitacoes`, municípios em "
+        "`municipios_nao_resolvidos`, e `warnings` retornados pelas tools.\n"
+        "4. Não invente valores: se um indicador não estiver disponível para "
+        "um município, informe isso explicitamente em vez de estimar."
     )
 
 

@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Comparação de Municípios** (`schemas/comparacao.py` +
+  `services/comparacao_service.py` + `tools/comparacao_tools.py`): nova tool
+  `comparar_municipios(municipios, indicadores=None, ano=None)` compara até
+  10 municípios (cada um com `nome` e `uf`) nos indicadores já implementados
+  com segurança (atualmente, população residente estimada).
+  - Municípios não encontrados ou com nome ambíguo na UF informada vão para
+    `data.municipios_nao_resolvidos` (com o `motivo`) e não interrompem a
+    comparação dos demais.
+  - Indicadores solicitados que ainda não são suportados (ex.: `"pib"`) vão
+    para `data.indicadores_nao_implementados` (apenas o nome) com um
+    `warning`, e a comparação continua com os indicadores reconhecidos. Sem
+    `indicadores`, usa os indicadores básicos disponíveis (`["populacao"]`).
+  - A resposta inclui `data.fontes` (endpoints usados, sem duplicatas) e
+    `data.limitacoes`, prontos para um agente apresentar uma tabela final
+    citando fonte, ano/período e unidade. Nenhum valor é inventado: se
+    nenhum município for resolvido, a resposta tem `ok=False`. O prompt
+    `comparar_municipios` foi atualizado para usar esta tool. See
+    [docs/tools.md](packages/mcp_ibge/docs/tools.md#23-comparar_municipios).
+
 - **Perfil Municipal** (`schemas/perfil.py` + `services/perfil_service.py` +
   `tools/perfil_tools.py`): nova tool `gerar_perfil_municipal(nome, uf, ano=None)`
   monta um perfil básico de município combinando as tools de Localidades

@@ -268,10 +268,16 @@ for more examples.
 | --- | --- | --- |
 | `gerar_perfil_municipal` | Generate a basic municipality profile: identification (IBGE code, state, region, micro-region/intermediate region) plus available indicators (estimated population, when possible). Clearly separates obtained data (`data.indicadores`) from suggested-but-not-implemented indicators (`data.proximos_indicadores_sugeridos`). | `gerar_perfil_municipal(nome="Niterói", uf="RJ")` |
 
+### Comparação de Municípios
+
+| Tool | Description | Example |
+| --- | --- | --- |
+| `comparar_municipios` | Compare up to 10 municipalities (by name + state) on the indicators already implemented (currently, estimated population). Unresolved/ambiguous municipalities go to `data.municipios_nao_resolvidos`, and unsupported indicators go to `data.indicadores_nao_implementados` (name only, with a `warning`) — neither stops the comparison of the rest. | `comparar_municipios(municipios=[{"nome": "Rio de Janeiro", "uf": "RJ"}, {"nome": "Niterói", "uf": "RJ"}])` |
+
 **Resources & prompts**: `ibge://status` (server status: version, available
 tools, query time) and `comparar_municipios` (a prompt that guides comparing
-an indicator across municipalities, always citing source, period, territorial
-unit and limitations).
+an indicator across municipalities using the `comparar_municipios` tool,
+always citing source, period, territorial unit and limitations).
 
 ## Data sources
 
