@@ -41,7 +41,7 @@ sharing the same conventions and tooling.
 
 ## 30-second demo
 
-![Demo: comparing Rio de Janeiro, Niterói and Maricá with mcp-ibge](docs/assets/demo.gif)
+![Demo: comparing Rio de Janeiro, Niterói and Maricá with mcp-data-br](docs/assets/demo.gif)
 
 > 🎥 Generated from a real `comparar_municipios` call — see
 > [Regenerating the demo GIF](#regenerating-the-demo-gif) below.

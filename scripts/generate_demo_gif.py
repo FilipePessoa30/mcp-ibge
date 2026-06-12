@@ -93,7 +93,7 @@ def render_frame(
     for i, color in enumerate(DOT_COLORS):
         cx = PADDING + i * 22
         draw.ellipse([cx, 12, cx + 12, 24], fill=color)
-    title = "mcp-ibge — comparar municípios"
+    title = "mcp-data-br — comparar municípios"
     draw.text((PADDING + 90, 9), title, font=font, fill=DIM_COLOR)
 
     for row, segments in enumerate(visible_lines):
