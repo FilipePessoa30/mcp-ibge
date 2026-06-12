@@ -179,6 +179,38 @@ small enough for the README to load quickly.
 | --- | --- | --- | --- |
 | [`mcp-ibge`](packages/mcp_ibge/) | **Stable** | IBGE — geographic locations (regions, states, municipalities, districts) and Agregados/SIDRA statistical aggregates | [README](packages/mcp_ibge/README.md) · [docs](packages/mcp_ibge/docs/) |
 
+## Secure by default
+
+Every module in `mcp-data-br` follows the same security baseline — see
+[docs/security.md](docs/security.md) for the full model and
+[packages/mcp_ibge/docs/security.md](packages/mcp_ibge/docs/security.md) for
+the `mcp-ibge` implementation details:
+
+1. **No shell execution** — pure Python + `httpx`, no `subprocess`/`os.system`.
+2. **No local file access** — tools never read or write user files; the only
+   file I/O is loading `.env` config at startup.
+3. **No arbitrary URLs** — tools take structured identifiers (codes, names,
+   periods), never a full URL.
+4. **Allowlisted domains only** — outbound requests are restricted to a fixed
+   set of official hosts (`https://servicodados.ibge.gov.br`), checked both at
+   startup and before every request.
+5. **Timeouts** on every outbound HTTP call.
+6. **Response size limits** — oversized responses are aborted, not buffered.
+7. **Input validation** before any network call — invalid parameters return a
+   structured error instead of reaching the upstream API.
+8. **No stack traces in errors** — the MCP client gets a short error message;
+   full tracebacks stay in `stderr` logs.
+9. **stdio-safe logging** — all logs go to `stderr`, never `stdout`.
+10. **No API keys** — every data source is free and unauthenticated; there are
+    no secrets to configure or leak.
+
+This is implemented by a small, centralized
+[`mcp_ibge.security`](packages/mcp_ibge/src/mcp_ibge/security.py) module
+(`assert_allowed_url`, `response_size_guard`, `safe_error_response`), covered
+by [`tests/test_security.py`](packages/mcp_ibge/tests/test_security.py)
+(external URL attempts, oversized responses, malicious inputs) — future
+modules follow the same pattern.
+
 ## Planned modules
 
 mcp-data-br is designed to grow. Planned/possible future modules include

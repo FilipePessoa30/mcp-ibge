@@ -14,6 +14,7 @@ from typing import Any
 from pydantic import BaseModel
 
 from ..schemas.common import TypedToolResult, build_metadata, build_tool_response
+from ..security import safe_error_response
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +46,7 @@ async def run_typed_tool(call: Awaitable[TypedToolResult[Any]]) -> dict[str, Any
             ok=False,
             data=None,
             metadata=build_metadata(source_url="", endpoint=""),
-            errors=[f"Erro inesperado: {exc}"],
+            errors=[f"Erro inesperado: {safe_error_response(exc)}"],
         )
 
     metadata = result.metadata

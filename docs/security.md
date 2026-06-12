@@ -34,6 +34,18 @@ package's `docs/security.md` (e.g.
 10. **stdio-safe logging** — all logs go to `stderr`. `stdout` is reserved
     exclusively for the MCP protocol when using the `stdio` transport.
 
+## Reference implementation
+
+In `mcp-ibge`, points 3, 4, 6, 7 and 9 are implemented by a small,
+centralized `mcp_ibge.security` module
+([source](../packages/mcp_ibge/src/mcp_ibge/security.py),
+[tests](../packages/mcp_ibge/tests/test_security.py)) that exposes
+`assert_allowed_url`/`is_allowed_url` (host allowlist check before every
+request), `response_size_guard` (response size limit) and
+`safe_error_response` (stack-trace-free error messages). See
+[packages/mcp_ibge/docs/security.md §12](../packages/mcp_ibge/docs/security.md#12-módulo-central-mcp_ibgesecurity)
+for details — future modules should follow the same pattern.
+
 ## Transports
 
 - **`stdio`** (default): no inbound network exposure — the client spawns the

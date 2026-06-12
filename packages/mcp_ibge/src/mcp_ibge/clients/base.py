@@ -14,6 +14,12 @@ from typing import Any
 import httpx
 
 from ..config import get_settings
+from ..security import (
+    ResponseTooLargeError,
+    URLNotAllowedError,
+    assert_allowed_url,
+    response_size_guard,
+)
 from ..utils.cache import get_cache
 from ..utils.errors import (
     IBGEClientError,
@@ -112,18 +118,19 @@ class AsyncIBGEClient:
 
         max_size = settings.max_response_size_bytes
         try:
+            assert_allowed_url(url)
             async with httpx.AsyncClient(timeout=settings.timeout, headers=headers) as client:
                 async with client.stream("GET", url, params=params) as response:
                     response.raise_for_status()
                     body = bytearray()
                     async for chunk in response.aiter_bytes():
                         body.extend(chunk)
-                        if len(body) > max_size:
-                            raise IBGEServerError(
-                                f"Resposta de {url} excede o limite de {max_size} bytes.",
-                                url=url,
-                            )
+                        response_size_guard(len(body), max_size=max_size, url=url)
                 data = json.loads(body)
+        except URLNotAllowedError as exc:
+            raise IBGEClientError(str(exc), url=url) from exc
+        except ResponseTooLargeError as exc:
+            raise IBGEServerError(str(exc), url=url) from exc
         except httpx.TimeoutException as exc:
             raise IBGEClientError(
                 f"Tempo limite excedido ({settings.timeout}s) ao consultar {url}", url=url

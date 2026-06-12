@@ -35,6 +35,10 @@ embutidos em *templates* de path fixos dentro de `clients/localidades.py` e
 nenhum caminho de código em que uma string fornecida pelo usuário/agente vire
 diretamente a URL de destino de uma requisição.
 
+Como segunda camada (em profundidade), `AsyncIBGEClient.get_json` chama
+`mcp_ibge.security.assert_allowed_url(url)` imediatamente antes de qualquer
+requisição — ver §4 e §12.
+
 ## 4. Domínios oficiais do IBGE (allowlist)
 
 Toda saída de rede é HTTP(S) para `Settings.api_base_url`
@@ -53,6 +57,11 @@ chega a rodar com um destino de rede não confiável. `AsyncIBGEClient` deriva
 `base_url` sempre a partir desse valor já validado
 (`settings.api_base_url.rstrip('/') + base_path`), então **toda** requisição
 de qualquer cliente vai para o mesmo domínio oficial.
+
+Além dessa validação na inicialização, `mcp_ibge.security.ALLOWED_HOSTS`
+reexporta `config.ALLOWED_API_HOSTS` e `assert_allowed_url(url)` repete a
+mesma checagem (esquema `https` + host na allowlist) **a cada requisição**,
+em `AsyncIBGEClient.get_json` — ver §12.
 
 ## 5. Validação de entrada (UF, município, agregado, variável, período, nível, limite)
 
@@ -114,12 +123,14 @@ Um timeout é convertido em `IBGEClientError` (sem stack trace exposta — ver
 ## 7. Limite de tamanho de resposta
 
 `AsyncIBGEClient.get_json` consome a resposta da API do IBGE em streaming
-(`client.stream("GET", ...)` + `aiter_bytes()`) e aborta com
-`IBGEServerError` assim que o corpo acumulado excede
-`Settings.max_response_size_bytes` (`MCP_IBGE_MAX_RESPONSE_SIZE_BYTES`,
-padrão `5_000_000` bytes / ~5 MB). Isso evita que uma resposta inesperadamente
-grande (ou uma API comprometida) consuma memória do processo de forma
-descontrolada antes do `json.loads`.
+(`client.stream("GET", ...)` + `aiter_bytes()`) e, após cada chunk, chama
+`mcp_ibge.security.response_size_guard(len(body), max_size=..., url=url)`
+(ver §12), que levanta `ResponseTooLargeError` assim que o corpo acumulado
+excede `Settings.max_response_size_bytes`
+(`MCP_IBGE_MAX_RESPONSE_SIZE_BYTES`, padrão `5_000_000` bytes / ~5 MB).
+`get_json` converte essa exceção em `IBGEServerError`. Isso evita que uma
+resposta inesperadamente grande (ou uma API comprometida) consuma memória do
+processo de forma descontrolada antes do `json.loads`.
 
 ## 8. Cache
 
@@ -158,8 +169,10 @@ A camada `tools/` (`run_typed_tool` em `tools/__init__.py`) captura **qualquer**
 exceção e converte para o envelope padrão com `ok=False`
 (`{"ok": false, "data": null, "metadata": {...}, "warnings": [...], "errors": [{"message": "<mensagem>", "code": null}]}`):
 
-- a mensagem em `errors[0].message` retornada ao cliente MCP é sempre a
-  mensagem da exceção (curta e informativa), nunca o traceback;
+- a mensagem em `errors[0].message` retornada ao cliente MCP é montada com
+  `mcp_ibge.security.safe_error_response(exc)` (ver §12), que usa apenas
+  `str(exc)` (ou o nome da classe da exceção, se a mensagem for vazia) — nunca
+  o traceback, caminhos do sistema de arquivos ou `repr()` de objetos internos;
 - o traceback completo é registrado via `logger.exception(...)`, que vai para
   `stderr` (ver §11) — útil para depuração local, mas não chega ao cliente MCP;
 - o servidor nunca derruba (não há exceção não tratada que propague até
@@ -174,6 +187,35 @@ vai para `stderr`. O código da aplicação nunca usa `print()` (ver comentário
 reservado exclusivamente para mensagens do protocolo MCP — qualquer escrita
 acidental em `stdout` corromperia a comunicação com o cliente MCP (ex.: Claude
 Desktop).
+
+## 12. Módulo central `mcp_ibge.security`
+
+[`mcp_ibge/security.py`](../src/mcp_ibge/security.py) centraliza, em um único
+módulo, as primitivas de segurança reutilizadas pelos clients HTTP
+(`clients/base.py`) e pela camada de tools (`tools/__init__.py`):
+
+| Nome | Usado em | Faz |
+| --- | --- | --- |
+| `ALLOWED_HOSTS` | `is_allowed_url`, `assert_allowed_url` | Reexporta `config.ALLOWED_API_HOSTS` (`{"servicodados.ibge.gov.br"}`) sob um nome mais descritivo. |
+| `is_allowed_url(url)` | `assert_allowed_url` | Retorna `True` apenas se `url` for `https` para um host em `ALLOWED_HOSTS`; qualquer outro esquema, host fora da allowlist (incluindo domínios "parecidos", ex.: `servicodados.ibge.gov.br.evil.com`) ou URL malformada retorna `False`. |
+| `assert_allowed_url(url)` | `AsyncIBGEClient.get_json` | Levanta `URLNotAllowedError` se `is_allowed_url(url)` for `False` — chamado antes de toda requisição (§3, §4). |
+| `response_size_guard(current_size, *, max_size=None, url="")` | `AsyncIBGEClient.get_json` | Levanta `ResponseTooLargeError` se `current_size` exceder `max_size` (ou `Settings.max_response_size_bytes`, se omitido) — chamado a cada chunk recebido (§7). |
+| `safe_error_response(exc)` | `run_typed_tool` | Converte `exc` em `str(exc)` (ou `type(exc).__name__`, se vazio) — nunca um traceback (§10). |
+
+`URLNotAllowedError` e `ResponseTooLargeError` (subclasses de `SecurityError`)
+são capturadas em `AsyncIBGEClient.get_json` e reconvertidas para
+`IBGEClientError`/`IBGEServerError` respectivamente, preservando o contrato de
+exceções já documentado em §10 — nenhum código que consome `AsyncIBGEClient`
+precisa conhecer `mcp_ibge.security` diretamente.
+
+Testes em [`tests/test_security.py`](../tests/test_security.py) cobrem:
+allowlist de domínios (URLs permitidas, http/ftp/file, domínios fora da
+allowlist e domínios "parecidos"), o bloqueio de uma requisição cuja URL não
+está na allowlist antes de qualquer chamada HTTP (via `respx`, verificando que
+a rota mockada nunca é chamada), o limite de tamanho de resposta (no nível da
+função e via `AsyncIBGEClient`), `safe_error_response` (sem traceback) e
+entradas maliciosas (SQL injection, `<script>`, *path traversal*) para todos
+os validadores de §5.
 
 ## Outros pontos
 
