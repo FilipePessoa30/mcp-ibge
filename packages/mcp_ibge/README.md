@@ -185,6 +185,11 @@ All settings have sensible defaults and can be overridden via environment
 variables (prefix `MCP_IBGE_`) or a `.env` file — see
 [.env.example](.env.example).
 
+Cache and log level can also be set via the shared `MCP_DATA_BR_*` names
+below — useful for configuring every `mcp-data-br` module the same way. If
+both a `MCP_DATA_BR_*` and a `MCP_IBGE_*` variable are set, `MCP_DATA_BR_*`
+takes precedence.
+
 | Variable | Default | Description |
 | --- | --- | --- |
 | `MCP_IBGE_API_BASE_URL` | `https://servicodados.ibge.gov.br/api` | Base URL shared by the IBGE APIs. Restricted to official IBGE domains (`https://servicodados.ibge.gov.br`) — see [docs/security.md](docs/security.md). |
@@ -194,10 +199,10 @@ variables (prefix `MCP_IBGE_`) or a `.env` file — see
 | `MCP_IBGE_USER_AGENT` | `mcp-ibge/0.2.0` | `User-Agent` header used for IBGE requests. |
 | `MCP_IBGE_TIMEOUT` | `30.0` | HTTP timeout (seconds) for each IBGE request. |
 | `MCP_IBGE_MAX_RESPONSE_SIZE_BYTES` | `5000000` | Maximum response body size (bytes) accepted from the IBGE API. |
-| `MCP_IBGE_CACHE_ENABLED` | `true` | Enable/disable the in-memory cache. |
-| `MCP_IBGE_CACHE_TTL_SECONDS` | `3600.0` | Cache entry time-to-live (seconds). |
+| `MCP_DATA_BR_ENABLE_CACHE` / `MCP_IBGE_CACHE_ENABLED` | `true` | Enable/disable the in-memory cache. |
+| `MCP_DATA_BR_CACHE_TTL_SECONDS` / `MCP_IBGE_CACHE_TTL_SECONDS` | `3600.0` | Cache entry time-to-live (seconds). |
 | `MCP_IBGE_CACHE_MAX_SIZE` | `256` | Maximum number of cached responses. |
-| `MCP_IBGE_LOG_LEVEL` | `INFO` | Log level (`DEBUG`, `INFO`, ...); always written to stderr. |
+| `MCP_DATA_BR_LOG_LEVEL` / `MCP_IBGE_LOG_LEVEL` | `INFO` | Log level (`DEBUG`, `INFO`, ...); always written to `stderr` as structured JSON lines (one object per record: `timestamp`, `level`, `logger`, `message`). |
 | `MCP_IBGE_TRANSPORT` | `stdio` | MCP transport (`stdio` or `streamable-http`). |
 | `MCP_IBGE_PORT` | `8000` | Port used by the `streamable-http` transport. |
 
@@ -294,10 +299,13 @@ for more examples.
 | `obter_bbox_municipio` | Get the bounding box (WGS84) of a municipality, computed from its simplified mesh. | `obter_bbox_municipio(codigo_ibge=3303302)` |
 | `gerar_geojson_municipios` | Combine the simplified meshes of up to 10 municipalities into a single GeoJSON `FeatureCollection`. | `gerar_geojson_municipios(codigos_ibge=[3304557, 3303302])` |
 
-**Resources & prompts**: `ibge://status` (server status: version, available
-tools, query time) and `comparar_municipios` (a prompt that guides comparing
-an indicator across municipalities using the `comparar_municipios` tool,
-always citing source, period, territorial unit and limitations).
+**Resources & prompts**: `mcp-data-br://status` (server status: version,
+registered tools, cache config/size, request metrics — `total_requests`,
+`cache_hits`, `cache_misses`, `errors`, `cache_hit_rate`,
+`average_latency_ms` —, uptime and data sources; `ibge://status` is a
+backwards-compatible alias) and `comparar_municipios` (a prompt that guides
+comparing an indicator across municipalities using the `comparar_municipios`
+tool, always citing source, period, territorial unit and limitations).
 
 ## Data sources
 

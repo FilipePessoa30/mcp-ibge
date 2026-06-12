@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -28,6 +29,7 @@ from ..utils.errors import (
     IBGEServerError,
     IBGEValidationError,
 )
+from ..utils.metrics import get_metrics
 
 logger = logging.getLogger(__name__)
 
@@ -111,12 +113,16 @@ class AsyncIBGEClient:
             cached = cache.get(key)
             if cached is not None:
                 logger.debug("cache hit: %s params=%s", url, params)
+                get_metrics().record_request(cache_hit=True, latency_ms=0.0, error=False)
                 return cached, True
 
         logger.debug("GET %s params=%s", url, params)
         headers = {"User-Agent": settings.user_agent, "Accept": "application/json"}
 
         max_size = settings.max_response_size_bytes
+        metrics = get_metrics()
+        start = time.perf_counter()
+        error_occurred = False
         try:
             assert_allowed_url(url)
             async with httpx.AsyncClient(timeout=settings.timeout, headers=headers) as client:
@@ -128,19 +134,31 @@ class AsyncIBGEClient:
                         response_size_guard(len(body), max_size=max_size, url=url)
                 data = json.loads(body)
         except URLNotAllowedError as exc:
+            error_occurred = True
             raise IBGEClientError(str(exc), url=url) from exc
         except ResponseTooLargeError as exc:
+            error_occurred = True
             raise IBGEServerError(str(exc), url=url) from exc
         except httpx.TimeoutException as exc:
+            error_occurred = True
             raise IBGEClientError(
                 f"Tempo limite excedido ({settings.timeout}s) ao consultar {url}", url=url
             ) from exc
         except httpx.HTTPStatusError as exc:
+            error_occurred = True
             raise _error_for_status(exc, url) from exc
         except httpx.RequestError as exc:
+            error_occurred = True
             raise IBGEClientError(f"Falha de conexão ao consultar {url}: {exc}", url=url) from exc
         except ValueError as exc:
+            error_occurred = True
             raise IBGEServerError(f"Resposta inválida (JSON malformado) de {url}", url=url) from exc
+        finally:
+            metrics.record_request(
+                cache_hit=False,
+                latency_ms=(time.perf_counter() - start) * 1000,
+                error=error_occurred,
+            )
 
         if cache is not None:
             cache.set(key, data)

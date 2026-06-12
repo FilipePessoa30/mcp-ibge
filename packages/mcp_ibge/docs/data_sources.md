@@ -118,6 +118,23 @@ informando `uf`).
 ## Cache
 
 As respostas das APIs do IBGE são opcionalmente cacheadas em memória
-(`utils/cache.py`, TTL configurável via `MCP_IBGE_CACHE_TTL_SECONDS`). O
+(`utils/cache.py`, TTL configurável via `MCP_DATA_BR_CACHE_TTL_SECONDS` /
+`MCP_IBGE_CACHE_TTL_SECONDS`). A chave do cache é a combinação
+**endpoint + parâmetros da consulta** (`AsyncIBGEClient.get_json`), então
+duas consultas ao mesmo endpoint com parâmetros diferentes nunca colidem. O
 cache é local ao processo, não persiste entre execuções e serve apenas para
-evitar chamadas repetidas durante a mesma sessão.
+evitar chamadas repetidas durante a mesma sessão. Habilitado/desabilitado via
+`MCP_DATA_BR_ENABLE_CACHE` / `MCP_IBGE_CACHE_ENABLED`.
+
+## Observabilidade
+
+Cada chamada `AsyncIBGEClient.get_json` (cache hit ou miss) é registrada em
+métricas internas, em memória (`utils/metrics.py`): `total_requests`,
+`cache_hits`, `cache_misses`, `errors` e `average_latency_ms`. O snapshot
+agregado dessas métricas, junto com a configuração do cache, o uptime do
+processo e as fontes de dados, é exposto pelo resource MCP
+`mcp-data-br://status` (`ibge://status` é um alias de compatibilidade) — ver
+[tools.md](tools.md#resources-e-prompts). Os logs do processo são emitidos
+em `stderr` como uma linha JSON por registro (nunca em `stdout`, reservado ao
+protocolo MCP no transporte `stdio`), no nível configurado por
+`MCP_DATA_BR_LOG_LEVEL` / `MCP_IBGE_LOG_LEVEL`.

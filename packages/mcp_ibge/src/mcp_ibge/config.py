@@ -11,7 +11,7 @@ from __future__ import annotations
 from functools import lru_cache
 from urllib.parse import urlparse
 
-from pydantic import field_validator
+from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Domínios oficiais do IBGE para os quais o servidor pode enviar requisições.
@@ -52,12 +52,32 @@ class Settings(BaseSettings):
     max_response_size_bytes: int = 5_000_000
 
     # Cache simples em memória (TTL) para reduzir chamadas repetidas às APIs.
-    cache_enabled: bool = True
-    cache_ttl_seconds: float = 3600.0
+    # Aceita tanto os nomes compartilhados entre módulos do mcp-data-br
+    # (`MCP_DATA_BR_ENABLE_CACHE`, `MCP_DATA_BR_CACHE_TTL_SECONDS`) quanto os
+    # nomes específicos do mcp-ibge (`MCP_IBGE_CACHE_ENABLED`,
+    # `MCP_IBGE_CACHE_TTL_SECONDS`), mantidos por compatibilidade. Quando
+    # ambos são definidos, o prefixo `MCP_DATA_BR_` tem precedência.
+    cache_enabled: bool = Field(
+        default=True,
+        validation_alias=AliasChoices("MCP_DATA_BR_ENABLE_CACHE", "MCP_IBGE_CACHE_ENABLED"),
+    )
+    cache_ttl_seconds: float = Field(
+        default=3600.0,
+        validation_alias=AliasChoices(
+            "MCP_DATA_BR_CACHE_TTL_SECONDS", "MCP_IBGE_CACHE_TTL_SECONDS"
+        ),
+    )
     cache_max_size: int = 256
 
-    # Logging e transporte do servidor MCP.
-    log_level: str = "INFO"
+    # Logging e transporte do servidor MCP. `log_level` aceita tanto
+    # `MCP_DATA_BR_LOG_LEVEL` (compartilhado entre módulos) quanto
+    # `MCP_IBGE_LOG_LEVEL` (específico do mcp-ibge, mantido por
+    # compatibilidade); `MCP_DATA_BR_LOG_LEVEL` tem precedência se ambos
+    # estiverem definidos.
+    log_level: str = Field(
+        default="INFO",
+        validation_alias=AliasChoices("MCP_DATA_BR_LOG_LEVEL", "MCP_IBGE_LOG_LEVEL"),
+    )
     transport: str = "stdio"
 
     # Porta usada quando `transport` é "streamable-http" (ignorada em "stdio").

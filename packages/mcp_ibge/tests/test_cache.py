@@ -7,9 +7,11 @@ from dataclasses import dataclass
 import httpx
 import respx
 
+from mcp_ibge.clients.base import AsyncIBGEClient
 from mcp_ibge.clients.localidades import LOCALIDADES_PATH, LocalidadesClient
 from mcp_ibge.config import get_settings
 from mcp_ibge.utils.cache import TTLCache, clear_cache, get_cache
+from mcp_ibge.utils.metrics import get_metrics
 
 BASE_URL = f"{get_settings().api_base_url}{LOCALIDADES_PATH}"
 
@@ -116,3 +118,81 @@ async def test_cliente_usa_cache_para_estado_rj(estado_rj):
     assert primeira.data == estado_rj
     assert segunda.data == estado_rj
     assert route.call_count == 1
+
+
+@respx.mock
+async def test_get_json_cache_miss_depois_cache_hit():
+    """A primeira chamada é um cache miss (faz requisição); a segunda, com a
+    mesma URL + params, é um cache hit (não faz requisição) — chave baseada
+    em endpoint + params."""
+    route = respx.get(f"{BASE_URL}/estados").mock(
+        return_value=httpx.Response(200, json=[{"id": 33, "sigla": "RJ"}])
+    )
+
+    client = AsyncIBGEClient(LOCALIDADES_PATH)
+
+    dados_1, cache_hit_1 = await client.get_json("/estados", params={"orderBy": "nome"})
+    dados_2, cache_hit_2 = await client.get_json("/estados", params={"orderBy": "nome"})
+
+    assert dados_1 == dados_2
+    assert cache_hit_1 is False
+    assert cache_hit_2 is True
+    assert route.call_count == 1
+
+    metricas = get_metrics().snapshot()
+    assert metricas["total_requests"] == 2
+    assert metricas["cache_misses"] == 1
+    assert metricas["cache_hits"] == 1
+    assert metricas["cache_hit_rate"] == 0.5
+    assert metricas["errors"] == 0
+
+
+@respx.mock
+async def test_get_json_chave_de_cache_distingue_params_diferentes():
+    """Endpoints iguais com `params` diferentes são entradas de cache
+    distintas — cada combinação endpoint + params gera uma chave própria."""
+    route = respx.get(f"{BASE_URL}/estados").mock(
+        return_value=httpx.Response(200, json=[{"id": 33, "sigla": "RJ"}])
+    )
+
+    client = AsyncIBGEClient(LOCALIDADES_PATH)
+
+    await client.get_json("/estados", params={"orderBy": "nome"})
+    await client.get_json("/estados", params={"orderBy": "id"})
+
+    assert route.call_count == 2
+    assert get_metrics().snapshot()["cache_misses"] == 2
+
+
+@respx.mock
+async def test_get_json_apos_ttl_expirado_e_cache_miss(monkeypatch):
+    """Após o TTL expirar, a entrada de cache é descartada e a próxima
+    chamada faz uma nova requisição (cache miss)."""
+    tempo = [0.0]
+    monkeypatch.setattr("mcp_ibge.utils.cache.time.monotonic", lambda: tempo[0])
+
+    settings = get_settings().model_copy(update={"cache_ttl_seconds": 10.0})
+    monkeypatch.setattr("mcp_ibge.utils.cache.get_settings", lambda: settings)
+    # Força a recriação do singleton para que o novo `cache_ttl_seconds` seja aplicado.
+    monkeypatch.setattr("mcp_ibge.utils.cache._cache", None)
+
+    route = respx.get(f"{BASE_URL}/estados").mock(
+        return_value=httpx.Response(200, json=[{"id": 33, "sigla": "RJ"}])
+    )
+
+    client = AsyncIBGEClient(LOCALIDADES_PATH)
+
+    _, cache_hit_1 = await client.get_json("/estados")
+    assert cache_hit_1 is False
+    assert route.call_count == 1
+
+    tempo[0] = 11.0  # avança além do TTL de 10s
+
+    _, cache_hit_2 = await client.get_json("/estados")
+    assert cache_hit_2 is False
+    assert route.call_count == 2
+
+    metricas = get_metrics().snapshot()
+    assert metricas["total_requests"] == 2
+    assert metricas["cache_misses"] == 2
+    assert metricas["cache_hits"] == 0

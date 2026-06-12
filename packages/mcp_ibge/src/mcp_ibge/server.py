@@ -1,8 +1,9 @@
 """Servidor MCP `mcp-ibge`.
 
 Wireup: cria a instância `FastMCP`, registra as tools de cada domínio
-(`tools.localidades_tools`, `tools.agregados_tools`, ...), o resource de
-status (`ibge://status`) e o prompt `comparar_municipios`.
+(`tools.localidades_tools`, `tools.agregados_tools`, ...), os resources de
+status (`mcp-data-br://status` e, por compatibilidade, `ibge://status`) e o
+prompt `comparar_municipios`.
 
 Execução:
     python -m mcp_ibge.server
@@ -19,6 +20,7 @@ protocolo MCP — todo log vai para stderr via `logging`.
 from __future__ import annotations
 
 import logging
+import time
 from datetime import UTC, datetime
 from importlib.metadata import version
 from typing import Annotated, Any, Literal, cast
@@ -36,8 +38,11 @@ from .tools import (
     perfil_tools,
     sidra_tools,
 )
+from .utils.cache import get_cache
+from .utils.metrics import get_metrics
 
 _settings = get_settings()
+_START_TIME = time.monotonic()
 
 mcp = FastMCP(
     "mcp-ibge",
@@ -63,17 +68,44 @@ comparacao_tools.register_comparacao_tools(mcp)
 geo_tools.register_geo_tools(mcp)
 
 
-@mcp.resource("ibge://status")
-async def status() -> dict[str, Any]:
-    """Status do servidor: versão, tools disponíveis e horário atual."""
+async def _status_payload() -> dict[str, Any]:
+    """Monta o payload de status: versão, tools, cache, métricas e fontes de dados."""
     tools = await mcp.list_tools()
+    cache = get_cache()
     return {
         "status": "ok",
         "server": "mcp-ibge",
         "version": version("mcp-ibge"),
         "tools": sorted(tool.name for tool in tools),
+        "cache": {
+            "enabled": cache is not None,
+            "ttl_seconds": _settings.cache_ttl_seconds,
+            "max_size": _settings.cache_max_size,
+            "current_size": len(cache) if cache is not None else 0,
+        },
+        "metrics": get_metrics().snapshot(),
+        "uptime_seconds": round(time.monotonic() - _START_TIME, 3),
+        "data_sources": [
+            {
+                "name": _settings.source_name,
+                "official_source": _settings.official_source_url,
+                "api_base_url": _settings.api_base_url,
+            }
+        ],
         "timestamp": datetime.now(UTC).isoformat(),
     }
+
+
+@mcp.resource("mcp-data-br://status")
+async def status() -> dict[str, Any]:
+    """Status do servidor: versão, tools, cache, métricas, uptime e fontes de dados."""
+    return await _status_payload()
+
+
+@mcp.resource("ibge://status")
+async def status_ibge() -> dict[str, Any]:
+    """Alias de compatibilidade para `mcp-data-br://status`."""
+    return await _status_payload()
 
 
 @mcp.prompt()

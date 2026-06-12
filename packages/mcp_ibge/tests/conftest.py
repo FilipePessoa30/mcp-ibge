@@ -15,6 +15,7 @@ import pytest
 
 from mcp_ibge.config import get_settings
 from mcp_ibge.utils.cache import clear_cache
+from mcp_ibge.utils.metrics import reset_metrics
 
 # Chaves do envelope padrão `{ok, data, metadata, warnings, errors}` (ver
 # `mcp_ibge.schemas.common.ToolResponse`) e de `SourceMetadata`, usadas pelos
@@ -42,6 +43,14 @@ def _isolar_cache():
     clear_cache()
     yield
     clear_cache()
+
+
+@pytest.fixture(autouse=True)
+def _isolar_metricas():
+    """Garante que as métricas internas (`utils.metrics`) não vazem entre testes."""
+    reset_metrics()
+    yield
+    reset_metrics()
 
 
 def assert_metadata_contract(metadata: dict[str, Any]) -> None:

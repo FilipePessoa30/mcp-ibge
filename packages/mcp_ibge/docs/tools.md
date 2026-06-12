@@ -2370,9 +2370,50 @@ para cada município informado.
 
 Além das 23 tools acima, o servidor expõe:
 
-- **Resource `ibge://status`**: status do servidor — `status`, `server`,
-  `version`, lista de `tools` disponíveis e `timestamp` (UTC, ISO 8601). Não
-  consulta a API do IBGE.
+- **Resource `mcp-data-br://status`** (`ibge://status` é um alias de
+  compatibilidade): status do servidor. Não consulta a API do IBGE —
+  responde a partir do estado em memória do processo:
+
+  ```json
+  {
+    "status": "ok",
+    "server": "mcp-ibge",
+    "version": "0.2.0",
+    "tools": ["buscar_municipio", "..."],
+    "cache": {
+      "enabled": true,
+      "ttl_seconds": 3600.0,
+      "max_size": 256,
+      "current_size": 12
+    },
+    "metrics": {
+      "total_requests": 42,
+      "cache_hits": 30,
+      "cache_misses": 12,
+      "errors": 0,
+      "cache_hit_rate": 0.7143,
+      "average_latency_ms": 8.21
+    },
+    "uptime_seconds": 123.4,
+    "data_sources": [
+      {
+        "name": "IBGE - Instituto Brasileiro de Geografia e Estatística",
+        "official_source": "https://www.ibge.gov.br/",
+        "api_base_url": "https://servicodados.ibge.gov.br/api"
+      }
+    ],
+    "timestamp": "2026-06-12T12:00:00+00:00"
+  }
+  ```
+
+  - `cache`: configuração e tamanho atual do cache em memória (`utils/cache.py`).
+  - `metrics`: contadores agregados desde o início do processo (`utils/metrics.py`)
+    — `cache_hit_rate` = `cache_hits / total_requests` (`0.0` se nenhuma
+    requisição ainda); `average_latency_ms` é a latência média de
+    `AsyncIBGEClient.get_json` (cache hits contam como ~0ms).
+  - `uptime_seconds`: tempo desde que o servidor foi importado/iniciado.
+  - `data_sources`: fonte(s) de dados configuradas (`source_name`,
+    `official_source`, `api_base_url`).
 - **Prompt `comparar_municipios`**: orienta a comparação de um indicador
   (padrão: `"população"`) entre municípios informados, guiando o uso da tool
   [`comparar_municipios`](#23-comparar_municipios) (que já resolve os
